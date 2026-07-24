@@ -1,0 +1,113 @@
+{% extends 'base.html' %}
+{% block title %}Rotation History - PIA Intern Management System{% endblock %}
+
+{% block content %}
+<div class="pia-table-toolbar">
+    <div>
+        <h3 class="pia-page-title mb-1"><i class="bi bi-arrow-left-right me-2"></i>Rotation History</h3>
+        <p class="pia-page-subtitle mb-0">Permanent record of every intern department rotation across the organization.</p>
+    </div>
+    <div class="pia-table-toolbar-actions">
+        <a href="{{ url_for('rotation.dashboard') }}" class="btn btn-outline-secondary text-nowrap">
+            <i class="bi bi-graph-up me-1"></i> Rotation Dashboard
+        </a>
+        <a href="{{ url_for('intern.list_interns') }}" class="btn pia-btn-primary text-nowrap">
+            <i class="bi bi-arrow-left-right me-1"></i> Rotate an Intern
+        </a>
+    </div>
+</div>
+
+<div class="card pia-card shadow-sm mb-3">
+    <div class="card-body py-3">
+        <form method="GET" class="row g-2 align-items-end">
+            <div class="col-md-4">
+                <label class="form-label small mb-1">Filter by Department</label>
+                <select class="form-select form-select-sm" name="department_id" onchange="this.form.submit()">
+                    <option value="">All Departments</option>
+                    {% for d in departments %}
+                    <option value="{{ d.id }}" {{ 'selected' if selected_department == d.id }}>{{ d.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label small mb-1">Filter by Intern</label>
+                <select class="form-select form-select-sm" name="intern_id" onchange="this.form.submit()">
+                    <option value="">All Interns</option>
+                    {% for i in interns %}
+                    <option value="{{ i.id }}" {{ 'selected' if selected_intern == i.id }}>{{ i.full_name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            {% if selected_department or selected_intern %}
+            <div class="col-md-2">
+                <a href="{{ url_for('rotation.list_rotations') }}" class="btn btn-sm btn-outline-secondary w-100">
+                    <i class="bi bi-x-circle me-1"></i> Clear
+                </a>
+            </div>
+            {% endif %}
+        </form>
+    </div>
+</div>
+
+<div class="card pia-card shadow-sm">
+    <div class="pia-table-heading px-3 pt-3">
+        <h4 class="mb-0"><i class="bi bi-arrow-left-right me-2"></i>Rotation History</h4>
+    </div>
+    <div class="table-responsive pia-table-wrap">
+        <table class="table pia-table align-middle mb-0" id="rotationsTable" data-page-size="15">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Intern</th>
+                    <th>From Dept.</th>
+                    <th>To Dept.</th>
+                    <th>To Manager</th>
+                    <th>Project</th>
+                    <th>Start</th>
+                    <th>End</th>
+                    <th>Duration</th>
+                    <th>Reason</th>
+                    <th class="text-end">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for r in rotations %}
+                <tr data-search="{{ r.intern.full_name | lower }}">
+                    <td>{{ loop.index }}</td>
+                    <td class="fw-semibold">{{ r.intern.full_name }}</td>
+                    <td>{{ r.from_department.name if r.from_department else '—' }}</td>
+                    <td>{{ r.to_department.name }}</td>
+                    <td>{{ r.to_manager.full_name }}</td>
+                    <td>{{ r.project.title if r.project else '—' }}</td>
+                    <td>{{ r.start_date.strftime('%d %b %Y') }}</td>
+                    <td>
+                        {% if r.end_date %}
+                            {{ r.end_date.strftime('%d %b %Y') }}
+                        {% else %}
+                            <span class="badge text-bg-success">Current</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ r.duration_display }}</td>
+                    <td class="text-truncate" style="max-width: 160px;" title="{{ r.reason }}">{{ r.reason }}</td>
+                    <td class="text-end">
+                        <a href="{{ url_for('rotation.timeline', intern_id=r.intern.id) }}"
+                           class="btn btn-sm btn-outline-primary" title="View Timeline">
+                            <i class="bi bi-clock-history"></i>
+                        </a>
+                    </td>
+                </tr>
+                {% else %}
+                <tr><td colspan="11" class="text-center text-muted py-4">No rotation records found.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% if rotations %}
+    <div class="pia-table-empty text-center d-none" data-empty-for="rotationsTable">
+        <i class="bi bi-search display-6 d-block mb-2"></i>
+        No rotations match your search.
+    </div>
+    <div class="card-body pt-0" data-pagination-for="rotationsTable"></div>
+    {% endif %}
+</div>
+{% endblock %}

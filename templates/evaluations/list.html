@@ -1,0 +1,130 @@
+{% extends 'base.html' %}
+{% block title %}Evaluations - PIA Intern Management System{% endblock %}
+
+{% block content %}
+<div class="pia-table-toolbar">
+    <div>
+        <h3 class="pia-page-title mb-1"><i class="bi bi-clipboard-check me-2"></i>
+            {{ 'Evaluations' if current_user.role == 'HR' else 'My Submitted Evaluations' }}
+        </h3>
+        <p class="pia-page-subtitle mb-0">Review intern performance scores, evaluation types, and evaluator details in one place.</p>
+    </div>
+    <div class="pia-table-toolbar-actions">
+        <div class="pia-table-search">
+            <i class="bi bi-search"></i>
+            <input type="text" class="form-control" data-table-search="evaluationsTable"
+                   placeholder="Search by intern name&hellip;" aria-label="Search evaluations">
+            <button type="button" class="pia-search-clear" aria-label="Clear search"><i class="bi bi-x-circle"></i></button>
+        </div>
+        <a href="{{ url_for('evaluation.add_evaluation') }}" class="btn pia-btn-primary text-nowrap">
+            <i class="bi bi-plus-circle me-1"></i>
+            {{ 'Submit HR Final Evaluation' if current_user.role == 'HR' else 'Evaluate an Intern' }}
+        </a>
+    </div>
+</div>
+
+{% if current_user.role == 'HR' %}
+<!-- Filter bar -->
+<div class="card pia-card shadow-sm mb-3">
+    <div class="card-body">
+        <form method="GET" class="row g-2 align-items-end">
+            <div class="col-md-4">
+                <label class="form-label small mb-1">Intern</label>
+                <select class="form-select form-select-sm" name="intern_id">
+                    <option value="">All</option>
+                    {% for intern in interns %}
+                    <option value="{{ intern.id }}" {{ 'selected' if filters.get('intern_id')|string == intern.id|string }}>
+                        {{ intern.full_name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label small mb-1">Type</label>
+                <select class="form-select form-select-sm" name="evaluation_type">
+                    <option value="">All</option>
+                    {% for t in evaluation_types %}
+                    <option value="{{ t }}" {{ 'selected' if filters.get('evaluation_type') == t }}>{{ t }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-sm pia-btn-primary w-100">
+                    <i class="bi bi-funnel me-1"></i> Filter
+                </button>
+            </div>
+            <div class="col-12">
+                <a href="{{ url_for('evaluation.list_evaluations') }}" class="small">Reset filters</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endif %}
+
+<div class="card pia-card shadow-sm">
+    <div class="pia-table-heading px-3 pt-3">
+        <h4 class="mb-0"><i class="bi bi-clipboard-check me-2"></i>Evaluations</h4>
+    </div>
+    <div class="table-responsive pia-table-wrap">
+        <table class="table pia-table align-middle mb-0" id="evaluationsTable" data-page-size="10">
+            <thead>
+                <tr>
+                    <th>Intern</th>
+                    <th>Type</th>
+                    <th>Total Score</th>
+                    <th>Evaluated By</th>
+                    <th>Date</th>
+                    <th class="text-end">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for e in evaluations %}
+                <tr data-search="{{ e.intern.full_name | lower }}">
+                    <td class="fw-semibold">{{ e.intern.full_name }}</td>
+                    <td>
+                        <span class="badge {{ 'text-bg-primary' if e.evaluation_type == 'HR Final' else 'text-bg-secondary' }}">
+                            {{ e.evaluation_type }}
+                        </span>
+                    </td>
+                    <td style="min-width: 140px;">
+                        <div class="d-flex align-items-center gap-2">
+                            <div class="progress flex-grow-1" style="height: 8px;">
+                                <div class="progress-bar
+                                    {{ 'bg-success' if e.percentage >= 70 else 'bg-warning' if e.percentage >= 50 else 'bg-danger' }}"
+                                    style="width: {{ e.percentage }}%;"></div>
+                            </div>
+                            <small class="text-nowrap">{{ e.total_score }}/60</small>
+                        </div>
+                    </td>
+                    <td>{{ e.evaluated_by.display_name() }}</td>
+                    <td class="text-nowrap">{{ e.created_at.strftime('%d %b %Y') }}</td>
+                    <td class="text-end text-nowrap">
+                        <a href="{{ url_for('evaluation.view_evaluation', evaluation_id=e.id) }}"
+                           class="btn btn-sm btn-outline-secondary" title="View">
+                            <i class="bi bi-eye"></i>
+                        </a>
+                        {% if current_user.role == 'HR' %}
+                        <form method="POST" action="{{ url_for('evaluation.delete_evaluation', evaluation_id=e.id) }}"
+                              class="d-inline" onsubmit="return confirm('Delete this evaluation?');">
+                            <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </form>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% else %}
+                <tr><td colspan="6" class="text-center text-muted py-4">No evaluations found.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% if evaluations %}
+    <div class="pia-table-empty text-center d-none" data-empty-for="evaluationsTable">
+        <i class="bi bi-search display-6 d-block mb-2"></i>
+        No evaluations match your search.
+    </div>
+    <div class="card-body pt-0" data-pagination-for="evaluationsTable"></div>
+    {% endif %}
+</div>
+{% endblock %}

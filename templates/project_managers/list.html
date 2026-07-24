@@ -1,0 +1,127 @@
+{% extends 'base.html' %}
+{% block title %}Project Managers - PIA Intern Management System{% endblock %}
+
+{% block content %}
+<div class="pia-table-toolbar">
+    <div>
+        <h3 class="pia-page-title mb-1"><i class="bi bi-person-badge me-2"></i>Project Managers</h3>
+        <p class="pia-page-subtitle mb-0">Manage project manager accounts, their department assignments, and active status.</p>
+    </div>
+    <div class="pia-table-toolbar-actions">
+        <div class="pia-table-search">
+            <i class="bi bi-search"></i>
+            <input type="text" class="form-control" data-table-search="pmsTable"
+                   placeholder="Search by name or P Number&hellip;" aria-label="Search project managers">
+            <button type="button" class="pia-search-clear" aria-label="Clear search"><i class="bi bi-x-circle"></i></button>
+        </div>
+        <select class="form-select form-select-sm w-auto" data-table-filter="pmsTable" data-filter-field="city"
+                aria-label="Filter by city">
+            <option value="">All Cities</option>
+            {% for c in cities %}
+            <option value="{{ c }}">{{ c }}</option>
+            {% endfor %}
+        </select>
+        <a href="{{ url_for('project_manager.add_pm') }}" class="btn pia-btn-primary text-nowrap">
+            <i class="bi bi-plus-circle me-1"></i> Add Project Manager
+        </a>
+    </div>
+</div>
+
+<div class="card pia-card shadow-sm">
+    <div class="pia-table-heading px-3 pt-3">
+        <h4 class="mb-0"><i class="bi bi-person-badge me-2"></i>Project Manager List</h4>
+    </div>
+    <div class="table-responsive pia-table-wrap">
+        <table class="table pia-table align-middle mb-0" id="pmsTable" data-page-size="10">
+            <thead>
+                <tr>
+                    <th>Photo</th>
+                    <th>Full Name</th>
+                    <th>P Number</th>
+                    <th>Department</th>
+                    <th>City</th>
+                    <th>Phone</th>
+                    <th>Email</th>
+                    <th>Designation</th>
+                    <th>Status</th>
+                    <th class="text-end">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for pm in pms %}
+                <tr data-search="{{ (pm.full_name ~ ' ' ~ pm.p_number ~ ' ' ~ pm.city) | lower }}"
+                    data-city="{{ pm.city }}">
+                    <td>
+                        {% if pm.user.profile_picture %}
+                        <img src="{{ url_for('static', filename='uploads/profile_pics/' ~ pm.user.profile_picture) }}"
+                             class="pia-avatar" alt="{{ pm.full_name }}">
+                        {% else %}
+                        <span class="pia-avatar pia-avatar-placeholder">{{ pm.full_name[0]|upper }}</span>
+                        {% endif %}
+                    </td>
+                    <td class="fw-semibold">{{ pm.full_name }}</td>
+                    <td>{{ pm.p_number }}</td>
+                    <td>{{ pm.department.name }}</td>
+                    <td>{{ pm.city }}</td>
+                    <td>{{ pm.phone }}</td>
+                    <td>{{ pm.user.email }}</td>
+                    <td>{{ pm.designation }}</td>
+                    <td>
+                        <span class="badge {{ 'text-bg-success' if pm.is_active_flag else 'text-bg-secondary' }}">
+                            {{ 'Active' if pm.is_active_flag else 'Inactive' }}
+                        </span>
+                    </td>
+                    <td class="text-end text-nowrap">
+                        <a href="{{ url_for('project_manager.edit_pm', pm_id=pm.id) }}"
+                           class="btn btn-sm btn-outline-primary" title="Edit">
+                            <i class="bi bi-pencil-square"></i>
+                        </a>
+                        <form method="POST" action="{{ url_for('project_manager.toggle_pm_status', pm_id=pm.id) }}"
+                              class="d-inline">
+                            <button type="submit" class="btn btn-sm btn-outline-warning"
+                                    title="{{ 'Deactivate' if pm.is_active_flag else 'Activate' }}">
+                                <i class="bi {{ 'bi-toggle-off' if pm.is_active_flag else 'bi-toggle2-on' }}"></i>
+                            </button>
+                        </form>
+                        <button type="button" class="btn btn-sm btn-outline-danger"
+                                data-bs-toggle="modal" data-bs-target="#deletePmModal{{ pm.id }}" title="Delete">
+                            <i class="bi bi-trash"></i>
+                        </button>
+
+                        <div class="modal fade" id="deletePmModal{{ pm.id }}" tabindex="-1">
+                            <div class="modal-dialog modal-dialog-centered">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title">Confirm Deletion</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        Delete Project Manager <strong>{{ pm.full_name }}</strong>?
+                                        This will also remove their login account.
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                        <form method="POST" action="{{ url_for('project_manager.delete_pm', pm_id=pm.id) }}">
+                                            <button type="submit" class="btn btn-danger">Delete</button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+                {% else %}
+                <tr><td colspan="10" class="text-center text-muted py-4">No Project Managers found.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% if pms %}
+    <div class="pia-table-empty text-center d-none" data-empty-for="pmsTable">
+        <i class="bi bi-search display-6 d-block mb-2"></i>
+        No project managers match your search.
+    </div>
+    <div class="card-body pt-0" data-pagination-for="pmsTable"></div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,113 @@
+{% extends 'base.html' %}
+{% block title %}Leave Records - PIA Intern Management System{% endblock %}
+
+{% block content %}
+<div class="pia-table-toolbar">
+    <div>
+        <h3 class="pia-page-title mb-1"><i class="bi bi-calendar2-week me-2"></i>Leave Records</h3>
+        <p class="pia-page-subtitle mb-0">Read-only view of every leave request. Approval, rejection, and comments are
+            handled by each intern's assigned Project Manager.</p>
+    </div>
+    <div class="pia-table-toolbar-actions">
+        <div class="pia-table-search">
+            <i class="bi bi-search"></i>
+            <input type="text" class="form-control" data-table-search="leaveRecordsTable"
+                   placeholder="Search by intern name&hellip;" aria-label="Search leave requests">
+            <button type="button" class="pia-search-clear" aria-label="Clear search"><i class="bi bi-x-circle"></i></button>
+        </div>
+        <span class="badge text-bg-warning fs-6">{{ pending_count }} pending org-wide</span>
+    </div>
+</div>
+
+<!-- Filter bar -->
+<div class="card pia-card shadow-sm mb-3">
+    <div class="card-body">
+        <form method="GET" class="row g-2 align-items-end">
+            <div class="col-md-3">
+                <label class="form-label small mb-1">Status</label>
+                <select class="form-select form-select-sm" name="status">
+                    <option value="">All</option>
+                    {% for s in statuses %}
+                    <option value="{{ s }}" {{ 'selected' if filters.get('status') == s }}>{{ s }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label small mb-1">Department</label>
+                <select class="form-select form-select-sm" name="department_id">
+                    <option value="">All</option>
+                    {% for d in departments %}
+                    <option value="{{ d.id }}" {{ 'selected' if filters.get('department_id')|string == d.id|string }}>{{ d.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-sm pia-btn-primary" title="Filter">
+                    <i class="bi bi-funnel"></i> Filter
+                </button>
+            </div>
+            <div class="col-12">
+                <a href="{{ url_for('leave.leave_records') }}" class="small">Reset filters</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card pia-card shadow-sm">
+    <div class="pia-table-heading px-3 pt-3">
+        <h4 class="mb-0"><i class="bi bi-calendar2-week me-2"></i>All Leave Requests</h4>
+    </div>
+    <div class="table-responsive pia-table-wrap">
+        <table class="table pia-table align-middle mb-0" id="leaveRecordsTable" data-page-size="10">
+            <thead>
+                <tr>
+                    <th>Intern</th>
+                    <th>Department</th>
+                    <th>Assigned PM</th>
+                    <th>Type</th>
+                    <th>Dates</th>
+                    <th>Reason</th>
+                    <th>Status</th>
+                    <th>PM Comment</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for leave in leaves %}
+                <tr data-search="{{ leave.intern.full_name | lower }}">
+                    <td class="fw-semibold">{{ leave.intern.full_name }}</td>
+                    <td>{{ leave.intern.department.name }}</td>
+                    <td>{{ leave.assigned_pm.full_name if leave.assigned_pm else '—' }}</td>
+                    <td>{{ leave.leave_type }}</td>
+                    <td class="text-nowrap">
+                        {{ leave.start_date.strftime('%d %b %Y') }} &ndash;
+                        {{ leave.end_date.strftime('%d %b %Y') }}
+                    </td>
+                    <td class="small">{{ leave.reason }}</td>
+                    <td>
+                        <span class="badge
+                            {{ 'text-bg-success' if leave.status == 'Approved'
+                               else 'text-bg-danger' if leave.status == 'Rejected'
+                               else 'text-bg-secondary' if leave.status == 'Cancelled'
+                               else 'text-bg-warning' }}">
+                            {{ leave.status }}
+                        </span>
+                    </td>
+                    <td class="small text-muted">{{ leave.review_remarks or '—' }}</td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="8" class="text-center text-muted py-4">No leave requests found.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% if leaves %}
+    <div class="pia-table-empty text-center d-none" data-empty-for="leaveRecordsTable">
+        <i class="bi bi-search display-6 d-block mb-2"></i>
+        No leave requests match your search.
+    </div>
+    <div class="card-body pt-0" data-pagination-for="leaveRecordsTable"></div>
+    {% endif %}
+</div>
+{% endblock %}

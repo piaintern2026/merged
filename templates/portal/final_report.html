@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+{% block title %}Final Internship Report - PIA Intern Management System{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h3 class="pia-page-title"><i class="bi bi-file-earmark-check me-2"></i>Final Internship Report</h3>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        {% if report %}
+        <div class="alert alert-info d-flex align-items-center mb-3">
+            <i class="bi bi-info-circle-fill me-2"></i>
+            You already submitted a Final Report on {{ report.submitted_at.strftime('%d %b %Y') }}.
+            Saving below will update it.
+        </div>
+        {% endif %}
+
+        <div class="card pia-card shadow-sm">
+            <div class="card-body p-4">
+                <form method="POST" enctype="multipart/form-data" novalidate>
+                    <div class="mb-3">
+                        <label class="form-label">Report Title <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" name="title" required
+                               placeholder="e.g. Internship Completion Report - Summer 2026"
+                               value="{{ report.title if report else '' }}">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Summary <span class="text-danger">*</span></label>
+                        <textarea class="form-control" name="summary" rows="8" required
+                                  placeholder="Describe your overall internship experience, key learnings, and outcomes...">{{ report.summary if report else '' }}</textarea>
+                    </div>
+                    <div class="pia-upload-zone mb-3">
+                        <i class="bi bi-file-earmark-arrow-up display-6 text-primary mb-2 d-block"></i>
+                        <input type="file" class="form-control" name="file" accept=".pdf">
+                        <div class="form-text">
+                            {% if report and report.stored_filename %}
+                                Current file: <strong>{{ report.original_filename }}</strong>
+                                (<a href="{{ url_for('static', filename='uploads/submissions/final_reports/' ~ report.stored_filename) }}" target="_blank">view</a>).
+                                Upload a new PDF to replace it.
+                            {% else %}
+                                Attach your full Final Internship Report as a PDF file.
+                            {% endif %}
+                        </div>
+                    </div>
+                    <button type="submit" class="btn pia-btn-primary">
+                        <i class="bi bi-check-circle me-1"></i> {{ 'Update' if report else 'Submit' }} Final Report
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

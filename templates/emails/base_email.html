@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{% block title %}PIA Intern Management System{% endblock %}</title>
+</head>
+<body style="margin:0; padding:0; background-color:#F8F9F7; font-family: 'Segoe UI', Arial, Helvetica, sans-serif;">
+<!-- Preheader (hidden preview text) -->
+<div style="display:none; max-height:0; overflow:hidden; opacity:0;">
+    {% block preheader %}{% endblock %}
+</div>
+
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#F8F9F7; padding:24px 12px;">
+    <tr>
+        <td align="center">
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0"
+                   style="max-width:600px; background-color:#FFFFFF; border-radius:14px; overflow:hidden; border:1px solid #D8DCCF;">
+
+                <!-- Header -->
+                <tr>
+                    <td style="background-color:#01411C; background-image:linear-gradient(135deg,#01411C 0%,#0B2E13 100%); padding:28px 32px;" align="center">
+                        <table role="presentation" cellpadding="0" cellspacing="0">
+                            <tr>
+                                <td style="font-family:'Segoe UI',Arial,sans-serif; color:#E3C567; font-size:22px; font-weight:700; letter-spacing:0.5px;">
+                                    ✈ PIA
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="font-family:'Segoe UI',Arial,sans-serif; color:#FFFFFF; font-size:13px; letter-spacing:0.5px; padding-top:2px;">
+                                    Intern Management System
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+
+                <!-- Gold accent bar -->
+                <tr>
+                    <td style="height:4px; background-color:#C9A227; line-height:4px; font-size:0;">&nbsp;</td>
+                </tr>
+
+                <!-- Body -->
+                <tr>
+                    <td style="padding:32px;">
+                        {% block body %}{% endblock %}
+                    </td>
+                </tr>
+
+                <!-- Footer -->
+                <tr>
+                    <td style="background-color:#F8F9F7; padding:20px 32px; border-top:1px solid #D8DCCF;">
+                        <p style="margin:0 0 6px 0; font-family:'Segoe UI',Arial,sans-serif; font-size:12px; color:#5E6A61; line-height:1.6;">
+                            This is an automated message from the PIA Intern Management System. Please do not reply directly to this email.
+                        </p>
+                        <p style="margin:0; font-family:'Segoe UI',Arial,sans-serif; font-size:12px; color:#5E6A61; line-height:1.6;">
+                            &copy; {{ current_year }} Pakistan International Airlines &mdash; All rights reserved.
+                        </p>
+                    </td>
+                </tr>
+
+            </table>
+        </td>
+    </tr>
+</table>
+</body>
+</html>

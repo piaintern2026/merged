@@ -1,0 +1,228 @@
+{% extends 'base.html' %}
+{% block title %}{{ intern.full_name }} - Intern Details{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h3 class="pia-page-title"><i class="bi bi-mortarboard me-2"></i>Intern Details</h3>
+    <a href="{{ url_for('intern.list_interns') }}" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left me-1"></i> Back to List
+    </a>
+</div>
+
+<div class="card pia-card shadow-sm">
+    <div class="card-body p-4">
+        <div class="d-flex align-items-center mb-4">
+            {% if intern.user.profile_picture %}
+                <img src="{{ url_for('static', filename='uploads/profile_pics/' ~ intern.user.profile_picture) }}"
+                     class="pia-avatar-lg me-3" alt="{{ intern.full_name }}">
+            {% else %}
+                <span class="pia-avatar-lg pia-avatar-placeholder me-3">{{ intern.full_name[0]|upper }}</span>
+            {% endif %}
+            <div>
+                <h4 class="mb-0">{{ intern.full_name }}</h4>
+                <p class="text-muted mb-0">{{ intern.degree }} &bull; {{ intern.university }}</p>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-md-6">
+                <h6 class="pia-form-section">Personal Information</h6>
+                <dl class="row mb-0">
+                    <dt class="col-5">CNIC</dt><dd class="col-7">{{ intern.cnic }}</dd>
+                    <dt class="col-5">City</dt><dd class="col-7">{{ intern.city }}</dd>
+                    <dt class="col-5">Phone</dt><dd class="col-7">{{ intern.phone }}</dd>
+                    <dt class="col-5">Address</dt><dd class="col-7">{{ intern.address or '—' }}</dd>
+                    <dt class="col-5">Email</dt><dd class="col-7">{{ intern.user.email }}</dd>
+                </dl>
+            </div>
+            <div class="col-md-6">
+                <h6 class="pia-form-section">Academic Information</h6>
+                <dl class="row mb-0">
+                    <dt class="col-5">University</dt><dd class="col-7">{{ intern.university }}</dd>
+                    <dt class="col-5">Degree</dt><dd class="col-7">{{ intern.degree }}</dd>
+                    <dt class="col-5">Semester</dt><dd class="col-7">{{ intern.semester }}</dd>
+                </dl>
+            </div>
+            <div class="col-md-6">
+                <h6 class="pia-form-section">Internship Details</h6>
+                <dl class="row mb-0">
+                    <dt class="col-5">Current Department</dt><dd class="col-7">{{ intern.department.name }}</dd>
+                    <dt class="col-5">Current Manager</dt>
+                    <dd class="col-7">{{ intern.current_manager.full_name if intern.current_manager else 'Not yet assigned' }}</dd>
+                    <dt class="col-5">Start Date</dt><dd class="col-7">{{ intern.internship_start_date.strftime('%d %b %Y') }}</dd>
+                    <dt class="col-5">End Date</dt><dd class="col-7">{{ intern.internship_end_date.strftime('%d %b %Y') }}</dd>
+                </dl>
+            </div>
+            <div class="col-md-6">
+                <h6 class="pia-form-section">Account Information</h6>
+                <dl class="row mb-0">
+                    <dt class="col-5">Username</dt><dd class="col-7">{{ intern.user.username }}</dd>
+                    <dt class="col-5">Role</dt><dd class="col-7">{{ intern.user.role|display_role }}</dd>
+                    <dt class="col-5">Registered On</dt><dd class="col-7">{{ intern.created_at.strftime('%d %b %Y') }}</dd>
+                </dl>
+            </div>
+        </div>
+
+        {% if current_user.role == 'Super Admin' %}
+        <a href="{{ url_for('intern.edit_intern', intern_id=intern.id) }}" class="btn pia-btn-primary mt-4">
+            <i class="bi bi-pencil-square me-1"></i> Edit Intern
+        </a>
+        {% endif %}
+        <a href="{{ url_for('rotation.rotate_intern', intern_id=intern.id) }}" class="btn btn-outline-primary mt-4">
+            <i class="bi bi-arrow-left-right me-1"></i> Rotate Intern
+        </a>
+        <a href="{{ url_for('rotation.timeline', intern_id=intern.id) }}" class="btn btn-outline-secondary mt-4">
+            <i class="bi bi-clock-history me-1"></i> Rotation Timeline
+        </a>
+        <a href="{{ url_for('rotation.final_report', intern_id=intern.id) }}" class="btn btn-outline-secondary mt-4">
+            <i class="bi bi-file-earmark-check me-1"></i> Final Internship Report
+        </a>
+    </div>
+</div>
+
+<!-- ==================== Module 3: Intern Portal activity ==================== -->
+<div class="row g-3 mt-1">
+    <div class="col-md-6">
+        <div class="card pia-stat-card border-0 shadow-sm">
+            <div class="card-body">
+                <div class="pia-stat-label mb-1">Assigned Project</div>
+                {% if assigned_project %}
+                <div class="fw-semibold">{{ assigned_project.title }}</div>
+                <span class="badge
+                    {{ 'text-bg-success' if assigned_project.status in ['Completed', 'Approved']
+                       else 'text-bg-danger' if assigned_project.status == 'Rejected'
+                       else 'text-bg-primary' if assigned_project.status == 'Submitted'
+                       else 'text-bg-warning' if assigned_project.status == 'Working'
+                       else 'text-bg-secondary' }} mt-1">
+                    {{ assigned_project.status }}
+                </span>
+                {% else %}
+                <span class="text-muted">No project assigned</span>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card pia-stat-card border-0 shadow-sm">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="pia-stat-label">Attendance Percentage</span>
+                    <span class="fw-bold">{{ attendance_percentage }}%</span>
+                </div>
+                <div class="progress" style="height: 8px;">
+                    <div class="progress-bar bg-success" style="width: {{ attendance_percentage }}%;"></div>
+                </div>
+                <small class="text-muted">{{ total_attendance }} day(s) recorded</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3 mt-1">
+    <div class="col-lg-6">
+        <div class="card pia-card shadow-sm h-100">
+            <div class="card-header pia-card-header"><i class="bi bi-cloud-upload me-2"></i>Project Submissions</div>
+            <ul class="list-group list-group-flush">
+                {% for s in submissions %}
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <div class="text-truncate" style="max-width: 260px;">
+                        <a href="{{ s.link|safe_link }}" target="_blank" rel="noopener noreferrer" title="{{ s.link }}">{{ s.link }}</a>
+                        <div class="text-muted small">{{ s.submitted_at.strftime('%d %b %Y') }}</div>
+                    </div>
+                    <button type="button" class="btn btn-sm btn-outline-secondary" title="Copy link"
+                            onclick="navigator.clipboard.writeText('{{ s.link }}')">
+                        <i class="bi bi-clipboard"></i>
+                    </button>
+                </li>
+                {% else %}
+                <li class="list-group-item text-muted text-center py-3">No submissions yet.</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+
+    <div class="col-lg-6">
+        <div class="card pia-card shadow-sm h-100">
+            <div class="card-header pia-card-header"><i class="bi bi-journal-text me-2"></i>Recent Work Log Entries</div>
+            <ul class="list-group list-group-flush">
+                {% for log in work_logs %}
+                <li class="list-group-item">
+                    <div class="d-flex justify-content-between">
+                        <strong>{{ log.log_date.strftime('%d %b %Y') }}</strong>
+                        <span class="text-muted small">{{ log.hours_worked }}h &bull; {{ log.progress_percent }}%</span>
+                    </div>
+                    <div class="text-muted small">{{ log.description[:100] }}{{ '…' if log.description|length > 100 }}</div>
+                </li>
+                {% else %}
+                <li class="list-group-item text-muted text-center py-3">No work log entries yet.</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+
+    <div class="col-lg-6">
+        <div class="card pia-card shadow-sm h-100">
+            <div class="card-header pia-card-header"><i class="bi bi-file-earmark-check me-2"></i>Final Report &amp; Feedback</div>
+            <div class="card-body">
+                {% if final_report %}
+                <p class="fw-semibold mb-1">{{ final_report.title }}</p>
+                <p class="text-muted small mb-2">{{ final_report.summary[:150] }}{{ '…' if final_report.summary|length > 150 }}</p>
+                {% if final_report.stored_filename %}
+                <a href="{{ url_for('static', filename='uploads/submissions/final_reports/' ~ final_report.stored_filename) }}"
+                   target="_blank" class="small"><i class="bi bi-paperclip"></i> {{ final_report.original_filename }}</a>
+                {% endif %}
+                {% else %}
+                <p class="text-muted small">Final report not submitted yet.</p>
+                {% endif %}
+                <hr>
+                {% if feedback %}
+                <p class="mb-1">
+                    <span class="badge bg-primary">{{ feedback.overall_experience_rating }}</span>
+                    <span class="text-muted small ms-1">avg rating {{ feedback.average_rating }}/5</span>
+                </p>
+                <p class="text-muted small mb-0">{{ feedback.valuable_learning[:150] }}{{ '…' if feedback.valuable_learning|length > 150 }}</p>
+                {% else %}
+                <p class="text-muted small mb-0">No feedback submitted yet.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-12">
+        <div class="card pia-card shadow-sm h-100">
+            <div class="card-header pia-card-header d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-clipboard-data me-2"></i>Project Manager Evaluation Forms</span>
+                {% if pm_evaluations %}
+                <a href="{{ url_for('pm_evaluation.list_evaluations', intern_id=intern.id) }}" class="small">
+                    View all in list &rarr;
+                </a>
+                {% endif %}
+            </div>
+            <ul class="list-group list-group-flush">
+                {% for e in pm_evaluations %}
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <div>
+                        <a href="{{ url_for('pm_evaluation.view_evaluation', evaluation_id=e.id) }}" class="fw-semibold text-decoration-none">
+                            {{ e.evaluation_date.strftime('%d %b %Y') }} &bull; {{ e.project.title }}
+                        </a>
+                        <div class="text-muted small">
+                            By {{ e.project_manager.full_name }}
+                            &bull;
+                            <span class="badge {{ 'text-bg-success' if e.is_finalized else 'text-bg-secondary' }}">
+                                {{ 'Finalized' if e.is_finalized else 'Draft' }}
+                            </span>
+                        </div>
+                    </div>
+                    <div class="text-end">
+                        <div class="fw-bold">{{ e.total_score }}/{{ e.MAX_GRAND_TOTAL }}</div>
+                        <div class="text-muted small">{{ e.percentage }}%</div>
+                    </div>
+                </li>
+                {% else %}
+                <li class="list-group-item text-muted text-center py-3">No Project Manager evaluation forms submitted yet.</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}

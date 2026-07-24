@@ -1,0 +1,179 @@
+{% extends 'base.html' %}
+{% block title %}{{ intern.full_name }} - Final Internship Report{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+    <h3 class="pia-page-title"><i class="bi bi-file-earmark-check me-2"></i>Final Internship Report</h3>
+    <div class="d-flex gap-2 flex-wrap">
+        <a href="{{ url_for('rotation.final_report_pdf', intern_id=intern.id) }}" class="btn pia-btn-primary">
+            <i class="bi bi-file-earmark-pdf me-1"></i> Download PDF
+        </a>
+        <a href="{{ url_for('rotation.timeline', intern_id=intern.id) }}" class="btn btn-outline-secondary">
+            <i class="bi bi-clock-history me-1"></i> Timeline
+        </a>
+        <a href="{{ url_for('intern.view_intern', intern_id=intern.id) }}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-1"></i> Back
+        </a>
+    </div>
+</div>
+
+<div class="card pia-card shadow-sm mb-3">
+    <div class="card-body p-4">
+        <div class="d-flex align-items-center mb-3">
+            {% if intern.user.profile_picture %}
+                <img src="{{ url_for('static', filename='uploads/profile_pics/' ~ intern.user.profile_picture) }}"
+                     class="pia-avatar-lg me-3" alt="{{ intern.full_name }}">
+            {% else %}
+                <span class="pia-avatar-lg pia-avatar-placeholder me-3">{{ intern.full_name[0]|upper }}</span>
+            {% endif %}
+            <div>
+                <h4 class="mb-0">{{ intern.full_name }}</h4>
+                <p class="text-muted mb-0">{{ intern.degree }} &bull; {{ intern.university }}</p>
+            </div>
+        </div>
+        <div class="row g-3">
+            <div class="col-md-3">
+                <div class="pia-stat-label">Internship Duration</div>
+                <div class="fw-bold fs-5">{{ total_days }} day(s)</div>
+                <div class="text-muted small">
+                    {{ intern.internship_start_date.strftime('%d %b %Y') }} &ndash;
+                    {{ intern.internship_end_date.strftime('%d %b %Y') }}
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="pia-stat-label">Departments Served</div>
+                <div class="fw-bold fs-5">{{ departments_served|length }}</div>
+            </div>
+            <div class="col-md-3">
+                <div class="pia-stat-label">Rotations</div>
+                <div class="fw-bold fs-5">{{ rotations|length }}</div>
+            </div>
+            <div class="col-md-3">
+                <div class="pia-stat-label">Attendance</div>
+                <div class="fw-bold fs-5">{{ attendance_percentage }}%</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3">
+    <div class="col-lg-6">
+        <div class="card pia-card shadow-sm h-100">
+            <div class="card-header pia-card-header"><i class="bi bi-building me-2"></i>Departments Served &amp; Time Spent</div>
+            <ul class="list-group list-group-flush">
+                {% for d in departments_served %}
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <span>{{ d.name }}</span>
+                    <span class="badge text-bg-secondary">{{ dept_time.get(d.name, 0) }} day(s)</span>
+                </li>
+                {% else %}
+                <li class="list-group-item text-muted text-center py-3">No department history yet.</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+
+    <div class="col-lg-6">
+        <div class="card pia-card shadow-sm h-100">
+            <div class="card-header pia-card-header"><i class="bi bi-person-badge me-2"></i>Managers Worked Under</div>
+            <ul class="list-group list-group-flush">
+                {% for m in managers_worked_under %}
+                <li class="list-group-item">
+                    <div class="fw-semibold">{{ m.full_name }}</div>
+                    <div class="text-muted small">{{ m.designation }} &bull; {{ m.department.name }}</div>
+                </li>
+                {% else %}
+                <li class="list-group-item text-muted text-center py-3">No managers recorded yet.</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+
+    <div class="col-lg-6">
+        <div class="card pia-card shadow-sm h-100">
+            <div class="card-header pia-card-header"><i class="bi bi-kanban me-2"></i>Projects Completed</div>
+            <ul class="list-group list-group-flush">
+                {% for p in projects_completed %}
+                <li class="list-group-item">
+                    <div class="fw-semibold">{{ p.title }}</div>
+                    <div class="text-muted small">{{ p.department.name }} &bull; {{ p.manager.full_name if p.manager else '-' }}</div>
+                </li>
+                {% else %}
+                <li class="list-group-item text-muted text-center py-3">No completed projects yet.</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+
+    <div class="col-lg-6">
+        <div class="card pia-card shadow-sm h-100">
+            <div class="card-header pia-card-header"><i class="bi bi-clipboard-check me-2"></i>Performance Ratings</div>
+            <div class="card-body">
+                {% if evaluations %}
+                <p class="mb-2"><strong>Average Score:</strong> {{ avg_score_pct }}%</p>
+                <ul class="list-group list-group-flush">
+                    {% for e in evaluations %}
+                    <li class="list-group-item d-flex justify-content-between">
+                        <span>{{ e.evaluation_type }} &bull; {{ e.created_at.strftime('%d %b %Y') }}</span>
+                        <span class="fw-semibold">{{ e.total_score }}/60 ({{ e.percentage }}%)</span>
+                    </li>
+                    {% endfor %}
+                </ul>
+                {% else %}
+                <p class="text-muted text-center mb-0 py-3">No evaluations recorded yet.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-6">
+        <div class="card pia-card shadow-sm h-100">
+            <div class="card-header pia-card-header"><i class="bi bi-calendar-check me-2"></i>Attendance Summary</div>
+            <div class="card-body">
+                <div class="progress mb-2" style="height: 8px;">
+                    <div class="progress-bar bg-success" style="width: {{ attendance_percentage }}%;"></div>
+                </div>
+                <dl class="row mb-0 small">
+                    <dt class="col-6">Total Records</dt><dd class="col-6">{{ total_attendance }}</dd>
+                    <dt class="col-6">Present</dt><dd class="col-6">{{ present_count }}</dd>
+                    <dt class="col-6">Absent</dt><dd class="col-6">{{ absent_count }}</dd>
+                    <dt class="col-6">Leave</dt><dd class="col-6">{{ leave_count }}</dd>
+                    <dt class="col-6">Late</dt><dd class="col-6">{{ late_count }}</dd>
+                </dl>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-12">
+        <div class="card pia-card shadow-sm">
+            <div class="card-header pia-card-header"><h4 class="mb-0 fs-6"><i class="bi bi-arrow-left-right me-2"></i>Rotation History</h4></div>
+            <div class="table-responsive pia-table-wrap">
+                <table class="table pia-table align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>From Dept.</th><th>To Dept.</th><th>To Manager</th>
+                            <th>Project</th><th>Start</th><th>End</th><th>Duration</th><th>Reason</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for r in rotations %}
+                        <tr>
+                            <td>{{ r.from_department.name if r.from_department else '—' }}</td>
+                            <td>{{ r.to_department.name }}</td>
+                            <td>{{ r.to_manager.full_name }}</td>
+                            <td>{{ r.project.title if r.project else '—' }}</td>
+                            <td>{{ r.start_date.strftime('%d %b %Y') }}</td>
+                            <td>{{ r.end_date.strftime('%d %b %Y') if r.end_date else 'Current' }}</td>
+                            <td>{{ r.duration_display }}</td>
+                            <td class="text-truncate" style="max-width: 180px;" title="{{ r.reason }}">{{ r.reason }}</td>
+                        </tr>
+                        {% else %}
+                        <tr><td colspan="8" class="text-center text-muted py-4">This intern has not been rotated yet.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

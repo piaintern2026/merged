@@ -1,0 +1,128 @@
+{% extends 'base.html' %}
+{% block title %}Interns - PIA Intern Management System{% endblock %}
+
+{% block content %}
+<div class="pia-table-toolbar">
+    <div>
+        <h3 class="pia-page-title mb-1"><i class="bi bi-mortarboard me-2"></i>Interns</h3>
+        <p class="pia-page-subtitle mb-0">Manage intern profiles, department assignments, and internship timelines across the organization.</p>
+    </div>
+    <div class="pia-table-toolbar-actions">
+        <div class="pia-table-search">
+            <i class="bi bi-search"></i>
+            <input type="text" class="form-control" data-table-search="internsTable"
+                   placeholder="Search by name or CNIC&hellip;" aria-label="Search interns">
+            <button type="button" class="pia-search-clear" aria-label="Clear search"><i class="bi bi-x-circle"></i></button>
+        </div>
+        <select class="form-select form-select-sm w-auto" data-table-filter="internsTable" data-filter-field="city"
+                aria-label="Filter by city">
+            <option value="">All Cities</option>
+            {% for c in cities %}
+            <option value="{{ c }}">{{ c }}</option>
+            {% endfor %}
+        </select>
+        {% if current_user.role == 'Super Admin' %}
+        <a href="{{ url_for('intern.add_intern') }}" class="btn pia-btn-primary text-nowrap">
+            <i class="bi bi-plus-circle me-1"></i> Add Intern
+        </a>
+        {% endif %}
+    </div>
+</div>
+
+<div class="card pia-card shadow-sm">
+    <div class="pia-table-heading px-3 pt-3">
+        <h4 class="mb-0"><i class="bi bi-mortarboard me-2"></i>Intern List</h4>
+    </div>
+    <div class="table-responsive pia-table-wrap">
+        <table class="table pia-table align-middle mb-0" id="internsTable" data-page-size="10">
+            <thead>
+                <tr>
+                    <th>Photo</th>
+                    <th>Full Name</th>
+                    <th>CNIC</th>
+                    <th>Department</th>
+                    <th>City</th>
+                    <th>University</th>
+                    <th>Start Date</th>
+                    <th>End Date</th>
+                    <th class="text-end">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for intern in interns %}
+                <tr data-search="{{ (intern.full_name ~ ' ' ~ intern.cnic ~ ' ' ~ intern.city) | lower }}"
+                    data-city="{{ intern.city }}">
+                    <td>
+                        {% if intern.user.profile_picture %}
+                        <img src="{{ url_for('static', filename='uploads/profile_pics/' ~ intern.user.profile_picture) }}"
+                             class="pia-avatar" alt="{{ intern.full_name }}">
+                        {% else %}
+                        <span class="pia-avatar pia-avatar-placeholder">{{ intern.full_name[0]|upper }}</span>
+                        {% endif %}
+                    </td>
+                    <td class="fw-semibold">{{ intern.full_name }}</td>
+                    <td>{{ intern.cnic }}</td>
+                    <td>{{ intern.department.name }}</td>
+                    <td>{{ intern.city }}</td>
+                    <td>{{ intern.university }}</td>
+                    <td>{{ intern.internship_start_date.strftime('%d %b %Y') }}</td>
+                    <td>{{ intern.internship_end_date.strftime('%d %b %Y') }}</td>
+                    <td class="text-end text-nowrap">
+                        <a href="{{ url_for('intern.view_intern', intern_id=intern.id) }}"
+                           class="btn btn-sm btn-outline-secondary" title="View">
+                            <i class="bi bi-eye"></i>
+                        </a>
+                        {% if current_user.role == 'Super Admin' %}
+                        <a href="{{ url_for('intern.edit_intern', intern_id=intern.id) }}"
+                           class="btn btn-sm btn-outline-primary" title="Edit">
+                            <i class="bi bi-pencil-square"></i>
+                        </a>
+                        {% endif %}
+                        <a href="{{ url_for('rotation.rotate_intern', intern_id=intern.id) }}"
+                           class="btn btn-sm btn-outline-secondary" title="Rotate Intern">
+                            <i class="bi bi-arrow-left-right"></i>
+                        </a>
+                        {% if current_user.role == 'Super Admin' %}
+                        <button type="button" class="btn btn-sm btn-outline-danger"
+                                data-bs-toggle="modal" data-bs-target="#deleteInternModal{{ intern.id }}" title="Delete">
+                            <i class="bi bi-trash"></i>
+                        </button>
+
+                        <div class="modal fade" id="deleteInternModal{{ intern.id }}" tabindex="-1">
+                            <div class="modal-dialog modal-dialog-centered">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title">Confirm Deletion</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        Delete intern <strong>{{ intern.full_name }}</strong>?
+                                        This will also remove their login account.
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                        <form method="POST" action="{{ url_for('intern.delete_intern', intern_id=intern.id) }}">
+                                            <button type="submit" class="btn btn-danger">Delete</button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% else %}
+                <tr><td colspan="9" class="text-center text-muted py-4">No interns registered yet.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% if interns %}
+    <div class="pia-table-empty text-center d-none" data-empty-for="internsTable">
+        <i class="bi bi-search display-6 d-block mb-2"></i>
+        No interns match your search.
+    </div>
+    <div class="card-body pt-0" data-pagination-for="internsTable"></div>
+    {% endif %}
+</div>
+{% endblock %}

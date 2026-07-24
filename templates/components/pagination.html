@@ -1,0 +1,51 @@
+<!--
+    components/pagination.html
+    ---------------------------
+    Reusable Bootstrap 5 pagination control for any Flask-SQLAlchemy
+    Pagination object. Include this partial after setting two
+    variables in the calling template's context: `pagination` (the
+    Pagination object) and `pagination_endpoint` (the endpoint string
+    passed to url_for, e.g. "notification.list_notifications"). An
+    optional `filters` dict (e.g. request.args) preserves active
+    filters across page links.
+-->
+{% if pagination and pagination.pages > 1 %}
+{% set clean_filters = {} %}
+{% if filters %}
+    {% for key, value in filters.items() %}
+        {% if key != 'page' and value %}
+            {% set _ = clean_filters.update({key: value}) %}
+        {% endif %}
+    {% endfor %}
+{% endif %}
+<nav aria-label="Page navigation" class="mt-3">
+    <ul class="pagination justify-content-center mb-0">
+        <li class="page-item {{ 'disabled' if not pagination.has_prev }}">
+            <a class="page-link"
+               href="{{ url_for(pagination_endpoint, page=pagination.prev_num, **clean_filters) if pagination.has_prev else '#' }}">
+                <i class="bi bi-chevron-left"></i>
+            </a>
+        </li>
+
+        {% for p in pagination.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+            {% if p %}
+                <li class="page-item {{ 'active' if p == pagination.page }}">
+                    <a class="page-link" href="{{ url_for(pagination_endpoint, page=p, **clean_filters) }}">{{ p }}</a>
+                </li>
+            {% else %}
+                <li class="page-item disabled"><span class="page-link">&hellip;</span></li>
+            {% endif %}
+        {% endfor %}
+
+        <li class="page-item {{ 'disabled' if not pagination.has_next }}">
+            <a class="page-link"
+               href="{{ url_for(pagination_endpoint, page=pagination.next_num, **clean_filters) if pagination.has_next else '#' }}">
+                <i class="bi bi-chevron-right"></i>
+            </a>
+        </li>
+    </ul>
+    <p class="text-center text-muted small mt-2 mb-0">
+        Showing {{ pagination.items|length }} of {{ pagination.total }} result(s) &bull; Page {{ pagination.page }} of {{ pagination.pages }}
+    </p>
+</nav>
+{% endif %}

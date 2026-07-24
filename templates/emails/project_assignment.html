@@ -1,0 +1,53 @@
+{% extends "emails/base_email.html" %}
+{% block title %}New Project Assignment - {{ project_title }}{% endblock %}
+{% block preheader %}You have been assigned to a new project: {{ project_title }}{% endblock %}
+
+{% block body %}
+<h2 style="margin:0 0 16px 0; font-family:'Segoe UI',Arial,sans-serif; color:#01411C; font-size:20px;">
+    New Project Assignment
+</h2>
+
+<p style="margin:0 0 16px 0; font-family:'Segoe UI',Arial,sans-serif; font-size:14px; color:#1E1E1E; line-height:1.6;">
+    Hi {{ recipient_name }},<br><br>
+    You have been assigned to a project{% if assigned_by %} by {{ assigned_by }}{% endif %}. Details are below.
+</p>
+
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0"
+       style="background-color:#F8F9F7; border:1px solid #D8DCCF; border-radius:10px; margin:20px 0;">
+    <tr>
+        <td style="padding:18px 20px;">
+            <p style="margin:0 0 8px 0; font-family:'Segoe UI',Arial,sans-serif; font-size:16px; color:#01411C; font-weight:700;">
+                {{ project_title }}
+            </p>
+            {% if project_description %}
+            <p style="margin:0 0 12px 0; font-family:'Segoe UI',Arial,sans-serif; font-size:14px; color:#1E1E1E; line-height:1.5;">
+                {{ project_description }}
+            </p>
+            {% endif %}
+            <p style="margin:0 0 4px 0; font-family:'Segoe UI',Arial,sans-serif; font-size:13px; color:#5E6A61;">
+                <strong>Department:</strong> {{ department_name }}
+            </p>
+            <p style="margin:0 0 4px 0; font-family:'Segoe UI',Arial,sans-serif; font-size:13px; color:#5E6A61;">
+                <strong>Priority:</strong> {{ priority }}
+            </p>
+            <p style="margin:0 0 4px 0; font-family:'Segoe UI',Arial,sans-serif; font-size:13px; color:#5E6A61;">
+                <strong>Start Date:</strong> {{ start_date }}
+            </p>
+            <p style="margin:0; font-family:'Segoe UI',Arial,sans-serif; font-size:13px; color:#C62828;">
+                <strong>Deadline:</strong> {{ deadline }}
+            </p>
+        </td>
+    </tr>
+</table>
+
+<table role="presentation" cellpadding="0" cellspacing="0">
+    <tr>
+        <td style="border-radius:8px; background-color:#01411C;">
+            <a href="{{ project_url }}" target="_blank"
+               style="display:inline-block; padding:12px 28px; font-family:'Segoe UI',Arial,sans-serif; font-size:14px; font-weight:600; color:#FFFFFF; text-decoration:none; border-radius:8px;">
+                View Project
+            </a>
+        </td>
+    </tr>
+</table>
+{% endblock %}

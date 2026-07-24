@@ -1,0 +1,214 @@
+{% extends 'base.html' %}
+{% block title %}Feedback - PIA Intern Management System{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h3 class="pia-page-title"><i class="bi bi-chat-square-heart me-2"></i>Intern Exit Feedback Form</h3>
+</div>
+
+{% set f = form if form else feedback %}
+{% macro fval(name) -%}
+{{ (form.get(name) if form else (feedback and feedback[name])) or '' }}
+{%- endmacro %}
+{% macro rating_row(statement, field) %}
+<tr>
+    <td class="text-start">{{ statement }}</td>
+    {% for i in range(1, 6) %}
+    <td class="text-center">
+        <input class="form-check-input" type="radio" name="{{ field }}" value="{{ i }}"
+               {{ 'checked' if (form and form.get(field)|string == i|string) or (not form and feedback and feedback[field] == i) }}
+               required aria-label="{{ i }}">
+    </td>
+    {% endfor %}
+</tr>
+{% endmacro %}
+{% macro competency_row(competency, field) %}
+<tr>
+    <td class="text-start">{{ competency }}</td>
+    {% for choice in feedback_competency_choices %}
+    <td class="text-center">
+        <input class="form-check-input" type="radio" name="{{ field }}" value="{{ choice }}"
+               {{ 'checked' if (form and form.get(field) == choice) or (not form and feedback and feedback[field] == choice) }}
+               required aria-label="{{ choice }}">
+    </td>
+    {% endfor %}
+</tr>
+{% endmacro %}
+
+<div class="row justify-content-center">
+    <div class="col-lg-9">
+        {% if feedback %}
+        <div class="alert alert-info d-flex align-items-center mb-3">
+            <i class="bi bi-info-circle-fill me-2"></i>
+            You submitted this form on {{ feedback.submitted_at.strftime('%d %b %Y') }}. Saving below will update it.
+        </div>
+        {% endif %}
+
+        <div class="card pia-card shadow-sm">
+            <div class="card-body p-4">
+                <form method="POST" novalidate id="feedbackForm">
+
+                    <h6 class="pia-form-section">Intern Information</h6>
+                    <div class="table-responsive mb-4">
+                        <table class="table table-bordered align-middle mb-0">
+                            <tbody>
+                                <tr><th class="w-25">Name</th><td>{{ intern_profile.full_name }}</td></tr>
+                                <tr><th>University</th><td>{{ intern_profile.university }}</td></tr>
+                                <tr><th>Degree Program</th><td>{{ intern_profile.degree }}</td></tr>
+                                <tr><th>Department</th><td>{{ intern_profile.department.name }}</td></tr>
+                                <tr><th>Station</th><td>{{ intern_profile.city }}</td></tr>
+                                <tr>
+                                    <th>Internship Duration</th>
+                                    <td>{{ intern_profile.internship_start_date.strftime('%d %b %Y') }} &ndash; {{ intern_profile.internship_end_date.strftime('%d %b %Y') }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Supervisor</th>
+                                    <td>{{ intern_profile.current_manager.full_name if intern_profile.current_manager else 'Not yet assigned' }}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="alert alert-light border small mb-4">
+                        <strong>Rating Scale:</strong> 5 = Excellent &nbsp;|&nbsp; 4 = Very Good &nbsp;|&nbsp;
+                        3 = Good &nbsp;|&nbsp; 2 = Fair &nbsp;|&nbsp; 1 = Poor
+                    </div>
+
+                    <h6 class="pia-form-section">Section A &ndash; Learning &amp; Development</h6>
+                    <div class="table-responsive mb-4">
+                        <table class="table table-bordered align-middle mb-0">
+                            <thead>
+                                <tr>
+                                    <th class="text-start">Statement</th>
+                                    <th class="text-center">1</th><th class="text-center">2</th>
+                                    <th class="text-center">3</th><th class="text-center">4</th><th class="text-center">5</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {{ rating_row('The internship provided meaningful practical learning opportunities.', 'a1_practical_learning') }}
+                                {{ rating_row('The tasks/projects assigned were relevant to my academic background.', 'a2_tasks_relevant') }}
+                                {{ rating_row('I was able to apply my academic knowledge in a practical environment.', 'a3_applied_knowledge') }}
+                                {{ rating_row('The internship enhanced my technical and professional skills.', 'a4_enhanced_skills') }}
+                                {{ rating_row("I gained a better understanding of PIACL's operations and work environment.", 'a5_understanding_operations') }}
+                                {{ rating_row('The internship contributed positively to my career development.', 'a6_career_development') }}
+                                {{ rating_row('Overall, the learning objectives of the internship were achieved.', 'a7_learning_objectives_achieved') }}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <h6 class="pia-form-section">Section B &ndash; Supervisor &amp; Department Support</h6>
+                    <div class="table-responsive mb-4">
+                        <table class="table table-bordered align-middle mb-0">
+                            <thead>
+                                <tr>
+                                    <th class="text-start">Statement</th>
+                                    <th class="text-center">1</th><th class="text-center">2</th>
+                                    <th class="text-center">3</th><th class="text-center">4</th><th class="text-center">5</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {{ rating_row('My supervisor provided adequate guidance and support throughout the internship.', 'b1_supervisor_guidance') }}
+                                {{ rating_row('Department staff were cooperative, approachable and encouraged learning.', 'b2_staff_cooperative') }}
+                                {{ rating_row('I received constructive feedback on my assignments and performance.', 'b3_constructive_feedback') }}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <h6 class="pia-form-section">Section C &ndash; Work Environment</h6>
+                    <div class="table-responsive mb-4">
+                        <table class="table table-bordered align-middle mb-0">
+                            <thead>
+                                <tr>
+                                    <th class="text-start">Statement</th>
+                                    <th class="text-center">1</th><th class="text-center">2</th>
+                                    <th class="text-center">3</th><th class="text-center">4</th><th class="text-center">5</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {{ rating_row('The workplace was professional, inclusive and supportive.', 'c1_professional_inclusive') }}
+                                {{ rating_row('The department provided adequate resources and opportunities to perform assigned tasks.', 'c2_adequate_resources') }}
+                                {{ rating_row('I felt welcomed, respected and treated as a member of the team.', 'c3_felt_welcomed') }}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <h6 class="pia-form-section">Section D &ndash; Competencies Developed</h6>
+                    <div class="table-responsive mb-4">
+                        <table class="table table-bordered align-middle mb-0">
+                            <thead>
+                                <tr>
+                                    <th class="text-start">Competency</th>
+                                    <th class="text-center">Significant Improvement</th>
+                                    <th class="text-center">Moderate</th>
+                                    <th class="text-center">Slight</th>
+                                    <th class="text-center">Not Improved</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {{ competency_row('Communication Skills', 'd1_communication_skills') }}
+                                {{ competency_row('Teamwork &amp; Collaboration', 'd2_teamwork_collaboration') }}
+                                {{ competency_row('Problem Solving &amp; Analytical Thinking', 'd3_problem_solving') }}
+                                {{ competency_row('Professional Ethics &amp; Discipline', 'd4_professional_ethics') }}
+                                {{ competency_row('Technical/Functional Knowledge', 'd5_technical_knowledge') }}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <h6 class="pia-form-section">Section E &ndash; Open Feedback</h6>
+                    <div class="mb-3">
+                        <label class="form-label">1. What was the most valuable learning experience during your internship? <span class="text-danger">*</span></label>
+                        <textarea class="form-control" name="valuable_learning" rows="4" required
+                                  placeholder="Describe your most valuable learning experience...">{{ fval('valuable_learning') }}</textarea>
+                    </div>
+                    <div class="mb-4">
+                        <label class="form-label">2. Please share any suggestions that may help PIACL further improve the Internship Program.</label>
+                        <textarea class="form-control" name="program_suggestions" rows="4"
+                                  placeholder="Optional suggestions for improvement...">{{ fval('program_suggestions') }}</textarea>
+                    </div>
+
+                    <h6 class="pia-form-section">Overall Assessment</h6>
+                    <div class="mb-3">
+                        <label class="form-label d-block">Overall, how would you rate your internship experience at PIACL? <span class="text-danger">*</span></label>
+                        {% for choice in ['Excellent', 'Very Good', 'Good', 'Fair', 'Poor'] %}
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="overall_experience_rating"
+                                   id="oer_{{ loop.index }}" value="{{ choice }}"
+                                   {{ 'checked' if (form and form.get('overall_experience_rating') == choice) or (not form and feedback and feedback.overall_experience_rating == choice) }} required>
+                            <label class="form-check-label" for="oer_{{ loop.index }}">{{ choice }}</label>
+                        </div>
+                        {% endfor %}
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label d-block">Would you recommend the PIACL Internship Program to other students? <span class="text-danger">*</span></label>
+                        {% for choice in ['Definitely Yes', 'Probably Yes', 'Not Sure', 'Probably No'] %}
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="recommend_program"
+                                   id="rp_{{ loop.index }}" value="{{ choice }}"
+                                   {{ 'checked' if (form and form.get('recommend_program') == choice) or (not form and feedback and feedback.recommend_program == choice) }} required>
+                            <label class="form-check-label" for="rp_{{ loop.index }}">{{ choice }}</label>
+                        </div>
+                        {% endfor %}
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label d-block">Would you be interested in future employment opportunities with PIACL? <span class="text-danger">*</span></label>
+                        {% for choice in ['Yes', 'Maybe', 'No'] %}
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="future_employment_interest"
+                                   id="fe_{{ loop.index }}" value="{{ choice }}"
+                                   {{ 'checked' if (form and form.get('future_employment_interest') == choice) or (not form and feedback and feedback.future_employment_interest == choice) }} required>
+                            <label class="form-check-label" for="fe_{{ loop.index }}">{{ choice }}</label>
+                        </div>
+                        {% endfor %}
+                    </div>
+
+                    <button type="submit" class="btn pia-btn-primary w-100">
+                        <i class="bi bi-send-check me-1"></i> {{ 'Update' if feedback else 'Submit' }} Feedback
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,441 @@
+{% extends 'base.html' %}
+{% block title %}Dashboard - PIA Intern Management System{% endblock %}
+
+{% if current_user.role in ['HR', 'Super Admin'] %}
+{% block extra_head %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
+{% endblock %}
+{% endif %}
+
+{% block content %}
+<!-- Welcome message -->
+<div class="pia-welcome-banner mb-4">
+    <div>
+        <h3 class="mb-1">Welcome, {{ current_user.display_name() }} 👋</h3>
+        <p class="mb-0 text-white-50">
+            {{ current_user.role|display_role }} &bull; Here's what's happening across the internship program today.
+        </p>
+    </div>
+    <img src="{{ url_for('static', filename='images/pia-logo.png') }}" alt="" class="pia-welcome-logo">
+</div>
+
+{% if current_user.role in ['HR', 'Super Admin'] %}
+<!-- Dashboard summary cards -->
+<h6 class="pia-section-label mb-2"><i class="bi bi-building me-1"></i> Organization Overview</h6>
+<div class="row g-3 mb-4">
+    <div class="col-sm-6 col-xl-3">
+        <div class="card pia-stat-card border-0 shadow-sm">
+            <div class="card-body d-flex align-items-center">
+                <div class="pia-stat-icon bg-primary-subtle text-primary"><i class="bi bi-building"></i></div>
+                <div class="ms-3">
+                    <div class="pia-stat-value">{{ stats.total_departments }}</div>
+                    <div class="pia-stat-label">Departments</div>
+                    <small class="text-success">{{ stats.active_departments }} active</small>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+        <div class="card pia-stat-card border-0 shadow-sm">
+            <div class="card-body d-flex align-items-center">
+                <div class="pia-stat-icon bg-info-subtle text-info"><i class="bi bi-person-badge"></i></div>
+                <div class="ms-3">
+                    <div class="pia-stat-value">{{ stats.total_project_managers }}</div>
+                    <div class="pia-stat-label">Project Managers</div>
+                    <small class="text-success">{{ stats.active_project_managers }} active</small>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+        <div class="card pia-stat-card border-0 shadow-sm">
+            <div class="card-body d-flex align-items-center">
+                <div class="pia-stat-icon bg-warning-subtle text-warning"><i class="bi bi-mortarboard"></i></div>
+                <div class="ms-3">
+                    <div class="pia-stat-value">{{ stats.total_interns }}</div>
+                    <div class="pia-stat-label">Total Interns</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+        <div class="card pia-stat-card border-0 shadow-sm">
+            <div class="card-body d-flex align-items-center">
+                <div class="pia-stat-icon bg-secondary-subtle text-secondary"><i class="bi bi-calendar-check"></i></div>
+                <div class="ms-3">
+                    <div class="pia-stat-value">{{ 2026 }}</div>
+                    <div class="pia-stat-label">Current Program Year</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Project summary cards -->
+<h6 class="pia-section-label mb-2"><i class="bi bi-kanban me-1"></i> Projects Overview</h6>
+<div class="row g-3 mb-4">
+    <div class="col-sm-6 col-xl-3">
+        <div class="card pia-stat-card border-0 shadow-sm">
+            <div class="card-body d-flex align-items-center">
+                <div class="pia-stat-icon bg-primary-subtle text-primary"><i class="bi bi-kanban"></i></div>
+                <div class="ms-3">
+                    <div class="pia-stat-value">{{ stats.total_projects }}</div>
+                    <div class="pia-stat-label">Total Projects</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+        <div class="card pia-stat-card border-0 shadow-sm">
+            <div class="card-body d-flex align-items-center">
+                <div class="pia-stat-icon bg-warning-subtle text-warning"><i class="bi bi-hourglass-split"></i></div>
+                <div class="ms-3">
+                    <div class="pia-stat-value">{{ stats.projects_pending }}</div>
+                    <div class="pia-stat-label">Pending Projects</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+        <div class="card pia-stat-card border-0 shadow-sm">
+            <div class="card-body d-flex align-items-center">
+                <div class="pia-stat-icon bg-success-subtle text-success"><i class="bi bi-check-circle"></i></div>
+                <div class="ms-3">
+                    <div class="pia-stat-value">{{ stats.projects_completed }}</div>
+                    <div class="pia-stat-label">Completed Projects</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+        <div class="card pia-stat-card border-0 shadow-sm">
+            <div class="card-body d-flex align-items-center justify-content-center">
+                <a href="{{ url_for('project.add_project') }}" class="btn pia-btn-primary btn-sm w-100">
+                    <i class="bi bi-plus-circle me-1"></i> New Project
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Leave Management section -->
+<div class="row g-3 mb-4">
+    <div class="col-12">
+        <div class="card pia-card shadow-sm">
+            <div class="card-body d-flex justify-content-between align-items-center flex-wrap gap-2">
+                <div class="d-flex align-items-center">
+                    <div class="pia-stat-icon bg-warning-subtle text-warning me-3"><i class="bi bi-calendar2-week"></i></div>
+                    <div>
+                        <div class="pia-stat-value">{{ stats.pending_leaves }}</div>
+                        <div class="pia-stat-label">Pending Leave Requests</div>
+                    </div>
+                </div>
+                <a href="{{ url_for('leave.leave_records') }}" class="btn pia-btn-primary btn-sm">
+                    <i class="bi bi-calendar2-week me-1"></i> Leave Records
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- City-based Management: interns by city and by department -->
+<h6 class="pia-section-label mb-2"><i class="bi bi-geo-alt me-1"></i> Interns by City &amp; Department</h6>
+<div class="row g-3 mb-4">
+    <div class="col-lg-6">
+        <div class="card pia-card shadow-sm h-100">
+            <div class="card-header pia-card-header d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-geo-alt me-2"></i>Total Interns by City</span>
+                <span class="badge text-bg-light text-dark border">{{ stats.total_interns }} total</span>
+            </div>
+            <div class="card-body">
+                {% if stats.total_interns == 0 %}
+                <div class="text-center text-muted py-4"><i class="bi bi-inbox display-6 d-block mb-2"></i>No Data Available</div>
+                {% else %}
+                <canvas id="chartDashboardInternsByCity" height="180"></canvas>
+                {% endif %}
+                <ul class="list-group list-group-flush mt-3">
+                    {% for row in interns_by_city %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                        {{ row.label }}
+                        <span class="badge text-bg-primary rounded-pill">{{ row.count }}</span>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-6">
+        <div class="card pia-card shadow-sm h-100">
+            <div class="card-header pia-card-header d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-building me-2"></i>Total Interns by Department</span>
+                <span class="badge text-bg-light text-dark border">{{ stats.total_interns }} total</span>
+            </div>
+            <div class="card-body">
+                {% if stats.total_interns == 0 %}
+                <div class="text-center text-muted py-4"><i class="bi bi-inbox display-6 d-block mb-2"></i>No Data Available</div>
+                {% else %}
+                <canvas id="chartDashboardInternsByDept" height="180"></canvas>
+                {% endif %}
+                <ul class="list-group list-group-flush mt-3">
+                    {% for row in interns_by_department %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                        {{ row.label }}
+                        <span class="badge text-bg-primary rounded-pill">{{ row.count }}</span>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent activity -->
+<h6 class="pia-section-label mb-2"><i class="bi bi-clock-history me-1"></i> Recent Activity</h6>
+<div class="row g-3">
+    <div class="col-lg-6">
+        <div class="card pia-card shadow-sm h-100">
+            <div class="card-header pia-card-header d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-person-badge me-2"></i>Recently Added Project Managers</span>
+                {% if current_user.role == 'Super Admin' %}
+                <a href="{{ url_for('project_manager.list_pms') }}" class="small">View all</a>
+                {% endif %}
+            </div>
+            <ul class="list-group list-group-flush">
+                {% for pm in recent_pms %}
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <div>
+                        <strong>{{ pm.full_name }}</strong>
+                        <div class="text-muted small">{{ pm.department.name }} &bull; {{ pm.designation }}</div>
+                    </div>
+                    <span class="badge {{ 'text-bg-success' if pm.is_active_flag else 'text-bg-secondary' }}">
+                        {{ 'Active' if pm.is_active_flag else 'Inactive' }}
+                    </span>
+                </li>
+                {% else %}
+                <li class="list-group-item text-muted text-center py-4">No Project Managers added yet.</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+
+    <div class="col-lg-6">
+        <div class="card pia-card shadow-sm h-100">
+            <div class="card-header pia-card-header d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-mortarboard me-2"></i>Recently Registered Interns</span>
+                <a href="{{ url_for('intern.list_interns') }}" class="small">View all</a>
+            </div>
+            <ul class="list-group list-group-flush">
+                {% for intern in recent_interns %}
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <div>
+                        <strong>{{ intern.full_name }}</strong>
+                        <div class="text-muted small">{{ intern.department.name }} &bull; {{ intern.university }}</div>
+                    </div>
+                    <span class="text-muted small">{{ intern.internship_start_date.strftime('%d %b %Y') }}</span>
+                </li>
+                {% else %}
+                <li class="list-group-item text-muted text-center py-4">No interns registered yet.</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+
+    <div class="col-lg-6">
+        <div class="card pia-card shadow-sm h-100">
+            <div class="card-header pia-card-header d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-kanban me-2"></i>Recently Created Projects</span>
+                <a href="{{ url_for('project.list_projects') }}" class="small">View all</a>
+            </div>
+            <ul class="list-group list-group-flush">
+                {% for proj in recent_projects %}
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <div>
+                        <strong>{{ proj.title }}</strong>
+                        <div class="text-muted small">{{ proj.department.name }} &bull; Deadline {{ proj.deadline.strftime('%d %b %Y') }}</div>
+                    </div>
+                    <span class="badge text-bg-primary">{{ proj.status }}</span>
+                </li>
+                {% else %}
+                <li class="list-group-item text-muted text-center py-4">No projects created yet.</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+</div>
+{% elif current_user.role == 'Project Manager' %}
+<!-- Manager Dashboard: assigned interns, assigned projects, deadlines -->
+<h6 class="pia-section-label mb-2"><i class="bi bi-speedometer2 me-1"></i> My Overview</h6>
+<div class="row g-3 mb-4">
+    <div class="col-sm-6 col-xl-4">
+        <div class="card pia-stat-card border-0 shadow-sm">
+            <div class="card-body d-flex align-items-center">
+                <div class="pia-stat-icon bg-warning-subtle text-warning"><i class="bi bi-mortarboard"></i></div>
+                <div class="ms-3">
+                    <div class="pia-stat-value">{{ pm_interns|length }}</div>
+                    <div class="pia-stat-label">Assigned Interns</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-4">
+        <div class="card pia-stat-card border-0 shadow-sm">
+            <div class="card-body d-flex align-items-center">
+                <div class="pia-stat-icon bg-primary-subtle text-primary"><i class="bi bi-kanban"></i></div>
+                <div class="ms-3">
+                    <div class="pia-stat-value">{{ pm_projects|length }}</div>
+                    <div class="pia-stat-label">Assigned Projects</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-4">
+        <div class="card pia-stat-card border-0 shadow-sm">
+            <div class="card-body d-flex align-items-center">
+                <div class="pia-stat-icon bg-danger-subtle text-danger"><i class="bi bi-alarm"></i></div>
+                <div class="ms-3">
+                    <div class="pia-stat-value">{{ upcoming_deadlines|length }}</div>
+                    <div class="pia-stat-label">Active / Upcoming Deadlines</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-4">
+        <div class="card pia-stat-card border-0 shadow-sm">
+            <div class="card-body d-flex align-items-center justify-content-between">
+                <div class="d-flex align-items-center">
+                    <div class="pia-stat-icon bg-warning-subtle text-warning"><i class="bi bi-calendar2-week"></i></div>
+                    <div class="ms-3">
+                        <div class="pia-stat-value">{{ pending_leaves }}</div>
+                        <div class="pia-stat-label">Pending Leave Requests</div>
+                    </div>
+                </div>
+                <a href="{{ url_for('leave.manage_leaves') }}" class="btn btn-sm pia-btn-primary">Review</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3">
+    <div class="col-lg-7">
+        <div class="card pia-card shadow-sm h-100">
+            <div class="card-header pia-card-header d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-kanban me-2"></i>My Assigned Projects</span>
+                <a href="{{ url_for('project.list_projects') }}" class="small">View all</a>
+            </div>
+            <ul class="list-group list-group-flush">
+                {% for proj in pm_projects %}
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <div>
+                        <strong>{{ proj.title }}</strong>
+                        <div class="text-muted small">
+                            {{ proj.department.name }}
+                            {% if proj.intern %} &bull; Intern: {{ proj.intern.full_name }}{% endif %}
+                        </div>
+                    </div>
+                    <div class="text-end">
+                        <span class="badge text-bg-primary d-block mb-1">{{ proj.status }}</span>
+                        <small class="{{ 'text-danger fw-bold' if proj.is_overdue() else 'text-muted' }}">
+                            Due {{ proj.deadline.strftime('%d %b %Y') }}
+                        </small>
+                    </div>
+                </li>
+                {% else %}
+                <li class="list-group-item text-muted text-center py-4">No projects assigned to you yet.</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+
+    <div class="col-lg-5">
+        <div class="card pia-card shadow-sm h-100">
+            <div class="card-header pia-card-header d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-mortarboard me-2"></i>My Assigned Interns</span>
+            </div>
+            <ul class="list-group list-group-flush">
+                {% for intern in pm_interns %}
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <div>
+                        <strong>{{ intern.full_name }}</strong>
+                        <div class="text-muted small">{{ intern.department.name }} &bull; {{ intern.university }}</div>
+                    </div>
+                </li>
+                {% else %}
+                <li class="list-group-item text-muted text-center py-4">No interns assigned to you yet.</li>
+                {% endfor %}
+            </ul>
+        </div>
+
+        <div class="card pia-card shadow-sm mt-3">
+            <div class="card-body d-grid gap-2">
+                <a href="{{ url_for('attendance.mark_attendance') }}" class="btn pia-btn-primary">
+                    <i class="bi bi-calendar-plus me-1"></i> Mark Attendance
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% else %}
+<div class="card pia-card shadow-sm">
+    <div class="card-body text-center py-5">
+        <i class="bi bi-info-circle display-4 text-primary mb-3"></i>
+        <h5>Your dashboard content will appear here.</h5>
+        <p class="text-muted">Additional features for your role will be available in future modules.</p>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_scripts %}
+{% if current_user.role in ['HR', 'Super Admin'] %}
+<script>
+    // City-based Management: render the Interns-by-City / Interns-by-Department
+    // charts on the HR dashboard. Data is aggregated server-side (routes/dashboard.py)
+    // via dynamic SQL GROUP BY queries -- nothing here is hardcoded.
+    const PIA_BLUE = '#01477a';
+    const PIA_GOLD = '#c9a24b';
+
+    const elCity = document.getElementById('chartDashboardInternsByCity');
+    if (elCity) {
+        new Chart(elCity, {
+            type: 'bar',
+            data: {
+                labels: {{ interns_by_city | map(attribute='label') | list | tojson }},
+                datasets: [{
+                    label: 'Interns',
+                    data: {{ interns_by_city | map(attribute='count') | list | tojson }},
+                    backgroundColor: PIA_GOLD,
+                    borderRadius: 4,
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: { legend: { display: false } },
+                scales: { y: { beginAtZero: true, ticks: { precision: 0 } } }
+            }
+        });
+    }
+
+    const elDept = document.getElementById('chartDashboardInternsByDept');
+    if (elDept) {
+        new Chart(elDept, {
+            type: 'bar',
+            data: {
+                labels: {{ interns_by_department | map(attribute='label') | list | tojson }},
+                datasets: [{
+                    label: 'Interns',
+                    data: {{ interns_by_department | map(attribute='count') | list | tojson }},
+                    backgroundColor: PIA_BLUE,
+                    borderRadius: 4,
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: { legend: { display: false } },
+                scales: { y: { beginAtZero: true, ticks: { precision: 0 } } }
+            }
+        });
+    }
+</script>
+{% endif %}
+{% endblock %}

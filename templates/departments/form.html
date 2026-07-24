@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+{% block title %}{{ 'Edit' if department else 'Add' }} Department - PIA Intern Management System{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h3 class="pia-page-title">
+        <i class="bi bi-building me-2"></i>{{ 'Edit' if department else 'Add' }} Department
+    </h3>
+    <a href="{{ url_for('department.list_departments') }}" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left me-1"></i> Back to List
+    </a>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-lg-7">
+        <div class="card pia-card shadow-sm">
+            <div class="card-body p-4">
+                <form method="POST" novalidate>
+                    <div class="mb-3">
+                        <label for="name" class="form-label">Department Name <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="name" name="name" required
+                               value="{{ department.name if department else '' }}">
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="city" class="form-label">City <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="city" name="city" required
+                               placeholder="e.g. Karachi"
+                               value="{{ department.city if department else '' }}">
+                        <div class="form-text">PIA has interns and departments across multiple cities -- record which city this department operates in.</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="description" class="form-label">Description</label>
+                        <textarea class="form-control" id="description" name="description" rows="4"
+                                  >{{ department.description if department else '' }}</textarea>
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="status" class="form-label">Status</label>
+                        <select class="form-select" id="status" name="status">
+                            <option value="Active" {{ 'selected' if department and department.status == 'Active' else '' }}>Active</option>
+                            <option value="Inactive" {{ 'selected' if department and department.status == 'Inactive' else '' }}>Inactive</option>
+                        </select>
+                    </div>
+
+                    <button type="submit" class="btn pia-btn-primary">
+                        <i class="bi bi-check-circle me-1"></i> {{ 'Update' if department else 'Save' }} Department
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

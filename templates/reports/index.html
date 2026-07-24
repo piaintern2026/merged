@@ -1,0 +1,249 @@
+{% extends 'base.html' %}
+{% block title %}Reports - PIA Intern Management System{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+    <h3 class="pia-page-title"><i class="bi bi-file-earmark-arrow-down me-2"></i>Report Center</h3>
+</div>
+
+<p class="text-muted mb-4">
+    Generate downloadable reports as PDF or Excel (.xlsx). Files are built on demand and are not stored on the server.
+</p>
+
+<!-- City x Department Matrix -->
+<div class="card pia-card shadow-sm mb-4">
+    <div class="pia-table-heading px-3 pt-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <h4 class="mb-0"><i class="bi bi-grid-3x3 me-2"></i>City &times; Department Matrix</h4>
+        <span class="badge text-bg-light text-dark border">
+            {{ city_dept_matrix.grand_total }} intern(s) total &bull; live, updates automatically
+        </span>
+    </div>
+    <p class="text-muted px-3 mt-2 mb-0">
+        Number of interns per department (rows) and city (columns). Recalculated directly from the
+        database on every page load, so it always reflects the latest registrations, edits, deletions,
+        transfers and rotations.
+    </p>
+    <div class="px-3 pt-2 d-flex gap-2 flex-wrap">
+        <a href="{{ url_for('reports.station_department_report', fmt='pdf') }}" class="btn btn-outline-danger btn-sm">
+            <i class="bi bi-file-earmark-pdf me-1"></i> Download PDF
+        </a>
+        <a href="{{ url_for('reports.station_department_report', fmt='excel') }}" class="btn btn-outline-success btn-sm">
+            <i class="bi bi-file-earmark-excel me-1"></i> Download Excel
+        </a>
+    </div>
+    <div class="table-responsive pia-table-wrap p-3">
+        <table class="table table-bordered table-sm align-middle mb-0" id="cityDeptMatrixTable">
+            <thead>
+                <tr>
+                    <th class="pia-table-heading-cell">Department</th>
+                    {% for city in city_dept_matrix.cities %}
+                    <th class="text-end">{{ city }}</th>
+                    {% endfor %}
+                    <th class="text-end table-secondary">Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in city_dept_matrix.matrix %}
+                <tr>
+                    <td class="fw-semibold">{{ row.department }}</td>
+                    {% for value in row.cells %}
+                    <td class="text-end">{{ value }}</td>
+                    {% endfor %}
+                    <td class="text-end fw-semibold table-secondary">{{ row.row_total }}</td>
+                </tr>
+                {% else %}
+                <tr><td colspan="{{ city_dept_matrix.cities|length + 2 }}" class="text-center text-muted py-4">No departments to show yet.</td></tr>
+                {% endfor %}
+            </tbody>
+            {% if city_dept_matrix.matrix %}
+            <tfoot>
+                <tr class="table-light">
+                    <td class="fw-semibold">Total</td>
+                    {% for total in city_dept_matrix.city_totals %}
+                    <td class="text-end fw-semibold">{{ total }}</td>
+                    {% endfor %}
+                    <td class="text-end fw-bold table-secondary">{{ city_dept_matrix.grand_total }}</td>
+                </tr>
+            </tfoot>
+            {% endif %}
+        </table>
+    </div>
+</div>
+
+<div class="row g-3">
+    <!-- 1. Attendance Report -->
+    <div class="col-md-6 col-xl-4">
+        <div class="card pia-card shadow-sm h-100">
+            <div class="card-body d-flex flex-column">
+                <div class="pia-stat-icon bg-primary-subtle text-primary mb-3"><i class="bi bi-calendar-check"></i></div>
+                <h5 class="card-title">Attendance Report</h5>
+                <p class="card-text text-muted flex-grow-1">
+                    Every attendance record across all interns: date, time, status, remarks and who marked it.
+                </p>
+                <div class="d-flex gap-2">
+                    <a href="{{ url_for('reports.attendance_report', fmt='pdf') }}" class="btn btn-outline-danger flex-fill">
+                        <i class="bi bi-file-earmark-pdf me-1"></i> PDF
+                    </a>
+                    <a href="{{ url_for('reports.attendance_report', fmt='excel') }}" class="btn btn-outline-success flex-fill">
+                        <i class="bi bi-file-earmark-excel me-1"></i> Excel
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. Evaluation Report -->
+    <div class="col-md-6 col-xl-4">
+        <div class="card pia-card shadow-sm h-100">
+            <div class="card-body d-flex flex-column">
+                <div class="pia-stat-icon bg-info-subtle text-info mb-3"><i class="bi bi-clipboard-check"></i></div>
+                <h5 class="card-title">Evaluation Report</h5>
+                <p class="card-text text-muted flex-grow-1">
+                    All PM and HR Final evaluations with full criteria breakdowns, totals and percentages.
+                </p>
+                <div class="d-flex gap-2">
+                    <a href="{{ url_for('reports.evaluation_report', fmt='pdf') }}" class="btn btn-outline-danger flex-fill">
+                        <i class="bi bi-file-earmark-pdf me-1"></i> PDF
+                    </a>
+                    <a href="{{ url_for('reports.evaluation_report', fmt='excel') }}" class="btn btn-outline-success flex-fill">
+                        <i class="bi bi-file-earmark-excel me-1"></i> Excel
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 3. Intern Progress Report -->
+    <div class="col-md-6 col-xl-4">
+        <div class="card pia-card shadow-sm h-100">
+            <div class="card-body d-flex flex-column">
+                <div class="pia-stat-icon bg-warning-subtle text-warning mb-3"><i class="bi bi-person-lines-fill"></i></div>
+                <h5 class="card-title">Intern Progress Report</h5>
+                <p class="card-text text-muted flex-grow-1">
+                    A detailed single-intern report: profile, attendance %, work logs, evaluations and submissions.
+                </p>
+                <select class="form-select form-select-sm mb-2" id="progressInternSelect">
+                    <option value="" selected disabled>Select an intern...</option>
+                    {% for intern in interns %}
+                    <option value="{{ intern.id }}">{{ intern.full_name }}</option>
+                    {% endfor %}
+                </select>
+                <div class="d-flex gap-2">
+                    <a href="#" id="progressPdfLink" class="btn btn-outline-danger flex-fill disabled">
+                        <i class="bi bi-file-earmark-pdf me-1"></i> PDF
+                    </a>
+                    <a href="#" id="progressExcelLink" class="btn btn-outline-success flex-fill disabled">
+                        <i class="bi bi-file-earmark-excel me-1"></i> Excel
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 4. Department Summary Report -->
+    <div class="col-md-6 col-xl-4">
+        <div class="card pia-card shadow-sm h-100">
+            <div class="card-body d-flex flex-column">
+                <div class="pia-stat-icon bg-secondary-subtle text-secondary mb-3"><i class="bi bi-building"></i></div>
+                <h5 class="card-title">Department Summary Report</h5>
+                <p class="card-text text-muted flex-grow-1">
+                    Per-department counts of Project Managers, interns, projects and average evaluation score.
+                </p>
+                <div class="d-flex gap-2">
+                    <a href="{{ url_for('reports.department_summary_report', fmt='pdf') }}" class="btn btn-outline-danger flex-fill">
+                        <i class="bi bi-file-earmark-pdf me-1"></i> PDF
+                    </a>
+                    <a href="{{ url_for('reports.department_summary_report', fmt='excel') }}" class="btn btn-outline-success flex-fill">
+                        <i class="bi bi-file-earmark-excel me-1"></i> Excel
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 5. Project Summary Report -->
+    <div class="col-md-6 col-xl-4">
+        <div class="card pia-card shadow-sm h-100">
+            <div class="card-body d-flex flex-column">
+                <div class="pia-stat-icon bg-primary-subtle text-primary mb-3"><i class="bi bi-kanban"></i></div>
+                <h5 class="card-title">Project Summary Report</h5>
+                <p class="card-text text-muted flex-grow-1">
+                    Every project with department, assigned manager/intern, priority, status and deadline.
+                </p>
+                <div class="d-flex gap-2">
+                    <a href="{{ url_for('reports.project_summary_report', fmt='pdf') }}" class="btn btn-outline-danger flex-fill">
+                        <i class="bi bi-file-earmark-pdf me-1"></i> PDF
+                    </a>
+                    <a href="{{ url_for('reports.project_summary_report', fmt='excel') }}" class="btn btn-outline-success flex-fill">
+                        <i class="bi bi-file-earmark-excel me-1"></i> Excel
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 6. Final Internship Report (Rotation Management) -->
+    <div class="col-md-6 col-xl-4">
+        <div class="card pia-card shadow-sm h-100">
+            <div class="card-body d-flex flex-column">
+                <div class="pia-stat-icon bg-success-subtle text-success mb-3"><i class="bi bi-file-earmark-check"></i></div>
+                <h5 class="card-title">Final Internship Report</h5>
+                <p class="card-text text-muted flex-grow-1">
+                    Consolidated end-to-end report: duration, departments served, managers, projects, time per
+                    department, performance ratings, attendance and full rotation history.
+                </p>
+                <select class="form-select form-select-sm mb-2" id="finalReportInternSelect">
+                    <option value="" selected disabled>Select an intern...</option>
+                    {% for intern in interns %}
+                    <option value="{{ intern.id }}">{{ intern.full_name }}</option>
+                    {% endfor %}
+                </select>
+                <div class="d-flex gap-2">
+                    <a href="#" id="finalReportViewLink" class="btn btn-outline-secondary flex-fill disabled">
+                        <i class="bi bi-eye me-1"></i> View
+                    </a>
+                    <a href="#" id="finalReportPdfLink" class="btn btn-outline-danger flex-fill disabled">
+                        <i class="bi bi-file-earmark-pdf me-1"></i> PDF
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    // Enable the Intern Progress Report download links once an intern
+    // is chosen from the dropdown, pointing them at the right ?intern_id=.
+    document.addEventListener('DOMContentLoaded', function () {
+        const select = document.getElementById('progressInternSelect');
+        const pdfLink = document.getElementById('progressPdfLink');
+        const excelLink = document.getElementById('progressExcelLink');
+        const pdfBase = "{{ url_for('reports.intern_progress_report', fmt='pdf') }}";
+        const excelBase = "{{ url_for('reports.intern_progress_report', fmt='excel') }}";
+
+        select.addEventListener('change', function () {
+            if (!select.value) return;
+            pdfLink.href = pdfBase + '?intern_id=' + select.value;
+            excelLink.href = excelBase + '?intern_id=' + select.value;
+            pdfLink.classList.remove('disabled');
+            excelLink.classList.remove('disabled');
+        });
+
+        // Final Internship Report (Rotation Management) selector.
+        const finalSelect = document.getElementById('finalReportInternSelect');
+        const finalViewLink = document.getElementById('finalReportViewLink');
+        const finalPdfLink = document.getElementById('finalReportPdfLink');
+        if (finalSelect) {
+            finalSelect.addEventListener('change', function () {
+                if (!finalSelect.value) return;
+                finalViewLink.href = "{{ url_for('rotation.final_report', intern_id=0) }}".replace('0', finalSelect.value);
+                finalPdfLink.href = "{{ url_for('rotation.final_report_pdf', intern_id=0) }}".replace('0', finalSelect.value);
+                finalViewLink.classList.remove('disabled');
+                finalPdfLink.classList.remove('disabled');
+            });
+        }
+    });
+</script>
+{% endblock %}

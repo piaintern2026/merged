@@ -1,0 +1,120 @@
+{% extends 'base.html' %}
+{% block title %}Users & Roles - PIA Intern Management System{% endblock %}
+
+{% block content %}
+<div class="pia-table-toolbar">
+    <div>
+        <h3 class="pia-page-title mb-1"><i class="bi bi-people me-2"></i>{{ 'HR Management' if role_filter == 'HR' else 'Users & Roles' }}</h3>
+        <p class="pia-page-subtitle mb-0">
+            {{ 'Manage HR staff accounts.' if role_filter == 'HR' else 'Manage every login account and role in the system.' }}
+        </p>
+    </div>
+    <div class="pia-table-toolbar-actions">
+        <div class="pia-table-search">
+            <i class="bi bi-search"></i>
+            <input type="text" class="form-control" data-table-search="usersTable"
+                   placeholder="Search by name, username or email&hellip;" aria-label="Search users">
+            <button type="button" class="pia-search-clear" aria-label="Clear search"><i class="bi bi-x-circle"></i></button>
+        </div>
+        <a href="{{ url_for('admin.add_user') }}" class="btn pia-btn-primary text-nowrap">
+            <i class="bi bi-person-plus me-1"></i> Add Account
+        </a>
+    </div>
+</div>
+
+<div class="card pia-card shadow-sm">
+    <div class="pia-table-heading px-3 pt-3">
+        <h4 class="mb-0"><i class="bi bi-people me-2"></i>All Accounts</h4>
+    </div>
+    <div class="table-responsive pia-table-wrap">
+        <table class="table pia-table align-middle mb-0" id="usersTable" data-page-size="15">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Full Name</th>
+                    <th>Username</th>
+                    <th>Email</th>
+                    <th>Role</th>
+                    <th>Status</th>
+                    <th class="text-end">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for user in users %}
+                <tr data-search="{{ (user.display_name() or '') | lower }} {{ user.username | lower }} {{ user.email | lower }}">
+                    <td>{{ loop.index }}</td>
+                    <td class="fw-semibold">{{ user.display_name() }}</td>
+                    <td>{{ user.username }}</td>
+                    <td>{{ user.email }}</td>
+                    <td>
+                        <span class="badge {{ 'text-bg-danger' if user.role == 'Super Admin' else 'text-bg-primary' if user.role == 'HR' else 'text-bg-info' if user.role == 'Project Manager' else 'text-bg-secondary' }}">
+                            {{ user.role|display_role }}
+                        </span>
+                    </td>
+                    <td>
+                        <span class="badge {{ 'text-bg-success' if user.is_active_account else 'text-bg-secondary' }}">
+                            {{ 'Active' if user.is_active_account else 'Inactive' }}
+                        </span>
+                    </td>
+                    <td class="text-end">
+                        {% if user.role in manageable_roles %}
+                        <a href="{{ url_for('admin.edit_user', user_id=user.id) }}"
+                           class="btn btn-sm btn-outline-primary" title="Edit">
+                            <i class="bi bi-pencil-square"></i>
+                        </a>
+                        {% if user.id != current_user.id %}
+                        <button type="button" class="btn btn-sm btn-outline-danger"
+                                data-bs-toggle="modal" data-bs-target="#deleteUserModal{{ user.id }}" title="Delete">
+                            <i class="bi bi-trash"></i>
+                        </button>
+
+                        <div class="modal fade" id="deleteUserModal{{ user.id }}" tabindex="-1">
+                            <div class="modal-dialog modal-dialog-centered">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title">Confirm Deletion</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        Delete account <strong>{{ user.username }}</strong>? This cannot be undone.
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                        <form method="POST" action="{{ url_for('admin.delete_user', user_id=user.id) }}">
+                                            <button type="submit" class="btn btn-danger">Delete</button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                        {% elif user.role == 'Intern' %}
+                        <a href="{{ url_for('intern.view_intern', intern_id=user.intern_profile.id) }}"
+                           class="btn btn-sm btn-outline-secondary" title="View intern profile">
+                            <i class="bi bi-eye"></i> Intern Profile
+                        </a>
+                        {% elif user.role == 'Project Manager' %}
+                        <a href="{{ url_for('project_manager.edit_pm', pm_id=user.project_manager_profile.id) }}"
+                           class="btn btn-sm btn-outline-secondary" title="View PM profile">
+                            <i class="bi bi-eye"></i> PM Profile
+                        </a>
+                        {% else %}
+                        &mdash;
+                        {% endif %}
+                    </td>
+                </tr>
+                {% else %}
+                <tr><td colspan="7" class="text-center text-muted py-4">No user accounts found.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% if users %}
+    <div class="pia-table-empty text-center d-none" data-empty-for="usersTable">
+        <i class="bi bi-search display-6 d-block mb-2"></i>
+        No accounts match your search.
+    </div>
+    <div class="card-body pt-0" data-pagination-for="usersTable"></div>
+    {% endif %}
+</div>
+{% endblock %}

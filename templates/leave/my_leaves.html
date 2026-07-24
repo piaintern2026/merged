@@ -1,0 +1,90 @@
+{% extends 'base.html' %}
+{% block title %}Leave Requests - PIA Intern Management System{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h3 class="pia-page-title"><i class="bi bi-calendar2-week me-2"></i>Leave Requests</h3>
+</div>
+
+<div class="row g-3">
+    <div class="col-lg-5">
+        <div class="card pia-card shadow-sm">
+            <div class="card-header pia-card-header">Apply for Leave</div>
+            <div class="card-body">
+                <form method="POST" novalidate>
+                    <div class="mb-3">
+                        <label class="form-label">Leave Type <span class="text-danger">*</span></label>
+                        <select class="form-select" name="leave_type" required>
+                            <option value="" disabled selected>Select leave type</option>
+                            {% for t in leave_types %}
+                            <option value="{{ t }}">{{ t }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="row g-3 mb-3">
+                        <div class="col-6">
+                            <label class="form-label">Start Date <span class="text-danger">*</span></label>
+                            <input type="date" class="form-control" name="start_date" required>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label">End Date <span class="text-danger">*</span></label>
+                            <input type="date" class="form-control" name="end_date" required>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Reason <span class="text-danger">*</span></label>
+                        <textarea class="form-control" name="reason" rows="4" required
+                                  placeholder="Briefly explain the reason for this leave"></textarea>
+                    </div>
+                    <button type="submit" class="btn pia-btn-primary w-100">
+                        <i class="bi bi-send-check me-1"></i> Submit Request
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-7">
+        <div class="card pia-card shadow-sm">
+            <div class="card-header pia-card-header"><h4 class="mb-0 fs-6"><i class="bi bi-clock-history me-1"></i>My Leave History</h4></div>
+            <div class="table-responsive pia-table-wrap">
+                <table class="table pia-table align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>Type</th>
+                            <th>Dates</th>
+                            <th>Reason</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for leave in leaves %}
+                        <tr>
+                            <td class="fw-semibold">{{ leave.leave_type }}</td>
+                            <td class="text-nowrap">
+                                {{ leave.start_date.strftime('%d %b %Y') }} &ndash;
+                                {{ leave.end_date.strftime('%d %b %Y') }}
+                            </td>
+                            <td class="small">{{ leave.reason }}</td>
+                            <td>
+                                <span class="badge
+                                    {{ 'text-bg-success' if leave.status == 'Approved'
+                                       else 'text-bg-danger' if leave.status == 'Rejected'
+                                       else 'text-bg-warning' }}">
+                                    {{ leave.status }}
+                                </span>
+                                {% if leave.status == 'Rejected' and leave.review_remarks %}
+                                <div class="small text-muted mt-1">{{ leave.review_remarks }}</div>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr><td colspan="4" class="text-center text-muted py-4">No leave requests yet.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

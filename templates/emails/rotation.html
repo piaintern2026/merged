@@ -1,0 +1,55 @@
+{% extends "emails/base_email.html" %}
+{% block title %}You Have Been Rotated - PIA Intern Management System{% endblock %}
+{% block preheader %}You've been rotated to {{ to_department }} under {{ to_manager }}.{% endblock %}
+
+{% block body %}
+<h2 style="margin:0 0 16px 0; font-family:'Segoe UI',Arial,sans-serif; color:#01411C; font-size:20px;">
+    Department Rotation Notice
+</h2>
+
+<p style="margin:0 0 16px 0; font-family:'Segoe UI',Arial,sans-serif; font-size:14px; color:#1E1E1E; line-height:1.6;">
+    Hi {{ intern_name }},<br><br>
+    As part of your internship rotation plan, you have been transferred to a new department. Details of your rotation are below.
+</p>
+
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0"
+       style="background-color:#F8F9F7; border:1px solid #D8DCCF; border-radius:10px; margin:20px 0;">
+    <tr>
+        <td style="padding:18px 20px; font-family:'Segoe UI',Arial,sans-serif; font-size:14px; color:#1E1E1E;">
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+                <tr>
+                    <td style="padding:6px 0; color:#5E6A61; width:40%;">From Department</td>
+                    <td style="padding:6px 0; font-weight:600;">{{ from_department or "N/A" }}</td>
+                </tr>
+                <tr>
+                    <td style="padding:6px 0; color:#5E6A61;">To Department</td>
+                    <td style="padding:6px 0; font-weight:700; color:#01411C;">{{ to_department }}</td>
+                </tr>
+                <tr>
+                    <td style="padding:6px 0; color:#5E6A61;">New Manager</td>
+                    <td style="padding:6px 0; font-weight:600;">{{ to_manager }}</td>
+                </tr>
+                <tr>
+                    <td style="padding:6px 0; color:#5E6A61;">Effective From</td>
+                    <td style="padding:6px 0; font-weight:600;">{{ start_date }}</td>
+                </tr>
+                <tr>
+                    <td style="padding:6px 0; color:#5E6A61; vertical-align:top;">Reason</td>
+                    <td style="padding:6px 0;">{{ reason }}</td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+</table>
+
+<table role="presentation" cellpadding="0" cellspacing="0">
+    <tr>
+        <td style="border-radius:8px; background-color:#01411C;">
+            <a href="{{ timeline_url }}" target="_blank"
+               style="display:inline-block; padding:12px 28px; font-family:'Segoe UI',Arial,sans-serif; font-size:14px; font-weight:600; color:#FFFFFF; text-decoration:none; border-radius:8px;">
+                View Rotation Timeline
+            </a>
+        </td>
+    </tr>
+</table>
+{% endblock %}

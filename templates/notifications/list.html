@@ -1,0 +1,135 @@
+{% extends 'base.html' %}
+{% block title %}Notifications - PIA Intern Management System{% endblock %}
+
+{% block content %}
+<div class="pia-table-toolbar">
+    <div>
+        <h3 class="pia-page-title mb-1"><i class="bi bi-bell-fill me-2"></i>Notifications</h3>
+        <p class="pia-page-subtitle mb-0">All updates addressed to you &mdash; project assignments, deadlines, evaluations, and reminders.</p>
+    </div>
+    <div class="pia-table-toolbar-actions">
+        <div class="pia-table-search">
+            <i class="bi bi-search"></i>
+            <input type="text" class="form-control" id="notifSearchInput"
+                   placeholder="Search notifications&hellip;" aria-label="Search notifications">
+            <button type="button" class="pia-search-clear" id="notifSearchClear" aria-label="Clear search"><i class="bi bi-x-circle"></i></button>
+        </div>
+        {% if unread_count > 0 %}
+        <form method="POST" action="{{ url_for('notification.mark_all_read') }}">
+            <button type="submit" class="btn btn-outline-secondary text-nowrap">
+                <i class="bi bi-check2-all me-1"></i> Mark all as read ({{ unread_count }})
+            </button>
+        </form>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Filter bar -->
+<div class="card pia-card shadow-sm mb-3">
+    <div class="card-body">
+        <form method="GET" class="row g-2 align-items-end">
+            <div class="col-md-4">
+                <label class="form-label small mb-1">Type</label>
+                <select class="form-select form-select-sm" name="notification_type">
+                    <option value="">All</option>
+                    {% for t in notification_types %}
+                    <option value="{{ t }}" {{ 'selected' if filters.get('notification_type') == t }}>{{ t }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label small mb-1">Status</label>
+                <select class="form-select form-select-sm" name="status">
+                    <option value="">All</option>
+                    <option value="unread" {{ 'selected' if filters.get('status') == 'unread' }}>Unread</option>
+                    <option value="read" {{ 'selected' if filters.get('status') == 'read' }}>Read</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-sm pia-btn-primary w-100">
+                    <i class="bi bi-funnel me-1"></i> Filter
+                </button>
+            </div>
+            <div class="col-12">
+                <a href="{{ url_for('notification.list_notifications') }}" class="small">Reset filters</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card pia-card shadow-sm">
+    <ul class="list-group list-group-flush" id="notifList">
+        {% for note in notifications %}
+        <li class="list-group-item d-flex align-items-start {{ 'bg-light' if not note.is_read }}"
+            data-search="{{ note.message | lower }}">
+            <i class="bi {{ note.icon }} text-primary me-3 mt-1"></i>
+            <div class="flex-grow-1">
+                <div class="d-flex align-items-center gap-2 mb-1">
+                    <span class="badge text-bg-secondary">{{ note.notification_type }}</span>
+                    {% if not note.is_read %}<span class="badge text-bg-primary">New</span>{% endif %}
+                </div>
+                <div>{{ note.message }}</div>
+                <small class="text-muted">{{ note.created_at.strftime('%d %b %Y, %I:%M %p') }}</small>
+            </div>
+            <div class="d-flex gap-1 text-nowrap">
+                {% if not note.is_read %}
+                <form method="POST" action="{{ url_for('notification.mark_read', notification_id=note.id) }}">
+                    <button type="submit" class="btn btn-sm btn-outline-secondary" title="Mark as read">
+                        <i class="bi bi-check2"></i>
+                    </button>
+                </form>
+                {% endif %}
+            </div>
+        </li>
+        {% else %}
+        <li class="list-group-item text-muted text-center py-5">No notifications found.</li>
+        {% endfor %}
+    </ul>
+    {% if notifications %}
+    <li class="list-group-item text-muted text-center py-5 d-none" id="notifEmptyState" style="list-style: none;">
+        <i class="bi bi-search display-6 d-block mb-2"></i>
+        No notifications match your search.
+    </li>
+    {% endif %}
+</div>
+
+{% set pagination_endpoint = 'notification.list_notifications' %}
+{% include 'components/pagination.html' %}
+
+{% if notifications %}
+<script>
+(function () {
+    const input = document.getElementById("notifSearchInput");
+    const clearBtn = document.getElementById("notifSearchClear");
+    const list = document.getElementById("notifList");
+    const emptyState = document.getElementById("notifEmptyState");
+    if (!input || !list) return;
+
+    const items = Array.from(list.querySelectorAll("li[data-search]"));
+
+    function filter() {
+        const q = input.value.trim().toLowerCase();
+        const wrap = input.closest(".pia-table-search");
+        if (wrap) wrap.classList.toggle("has-value", q.length > 0);
+
+        let visibleCount = 0;
+        items.forEach(function (li) {
+            const match = !q || li.dataset.search.indexOf(q) !== -1;
+            li.style.display = match ? "" : "none";
+            if (match) visibleCount += 1;
+        });
+        if (emptyState) emptyState.classList.toggle("d-none", visibleCount !== 0 || !q);
+    }
+
+    input.addEventListener("input", filter);
+    if (clearBtn) {
+        clearBtn.addEventListener("click", function () {
+            input.value = "";
+            filter();
+            input.focus();
+        });
+    }
+})();
+</script>
+{% endif %}
+{% endblock %}

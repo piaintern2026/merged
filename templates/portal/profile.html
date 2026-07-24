@@ -1,0 +1,78 @@
+{% extends 'base.html' %}
+{% block title %}My Profile - PIA Intern Management System{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h3 class="pia-page-title"><i class="bi bi-person-circle me-2"></i>My Profile</h3>
+</div>
+
+<div class="row g-3 justify-content-center">
+    <div class="col-lg-8">
+        <div class="card pia-card shadow-sm mb-3">
+            <div class="card-body p-4">
+                <div class="d-flex align-items-center mb-4">
+                    {% if current_user.profile_picture %}
+                        <img src="{{ url_for('static', filename='uploads/profile_pics/' ~ current_user.profile_picture) }}"
+                             class="pia-avatar-lg me-3" alt="{{ intern.full_name }}">
+                    {% else %}
+                        <span class="pia-avatar-lg pia-avatar-placeholder me-3">{{ intern.full_name[0]|upper }}</span>
+                    {% endif %}
+                    <div>
+                        <h4 class="mb-0">{{ intern.full_name }}</h4>
+                        <p class="text-muted mb-0">{{ intern.degree }} &bull; {{ intern.university }}</p>
+                    </div>
+                </div>
+
+                <form method="POST" enctype="multipart/form-data" novalidate>
+                    <h6 class="pia-form-section">Editable Information</h6>
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-6">
+                            <label class="form-label">Phone <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" name="phone" required
+                                   value="{{ intern.phone }}">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Profile Picture</label>
+                            <input type="file" class="form-control" name="profile_picture"
+                                   accept=".png,.jpg,.jpeg,.gif">
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Address</label>
+                            <textarea class="form-control" name="address" rows="2"
+                                      placeholder="Your current residential address">{{ intern.address or '' }}</textarea>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn pia-btn-primary">
+                        <i class="bi bi-check-circle me-1"></i> Save Changes
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <div class="card pia-card shadow-sm">
+            <div class="card-header pia-card-header">Read-Only Information</div>
+            <div class="card-body">
+                <dl class="row mb-0">
+                    <dt class="col-sm-4">CNIC</dt><dd class="col-sm-8">{{ intern.cnic }}</dd>
+                    <dt class="col-sm-4">Email</dt><dd class="col-sm-8">{{ current_user.email }}</dd>
+                    <dt class="col-sm-4">Username</dt><dd class="col-sm-8">{{ current_user.username }}</dd>
+                    <dt class="col-sm-4">Department</dt><dd class="col-sm-8">{{ intern.department.name }}</dd>
+                    <dt class="col-sm-4">City</dt><dd class="col-sm-8">{{ intern.city }}</dd>
+                    <dt class="col-sm-4">Semester</dt><dd class="col-sm-8">{{ intern.semester }}</dd>
+                    <dt class="col-sm-4">Internship Period</dt>
+                    <dd class="col-sm-8">
+                        {{ intern.internship_start_date.strftime('%d %b %Y') }} &ndash;
+                        {{ intern.internship_end_date.strftime('%d %b %Y') }}
+                    </dd>
+                </dl>
+                <div class="alert alert-secondary small mt-3 mb-0">
+                    <i class="bi bi-info-circle me-1"></i>
+                    These fields were set by HR during registration. Contact HR if any of this
+                    information needs to be corrected.
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

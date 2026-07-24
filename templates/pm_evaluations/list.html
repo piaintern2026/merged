@@ -1,0 +1,148 @@
+{% extends 'base.html' %}
+{% block title %}PM Evaluation Forms - PIA Intern Management System{% endblock %}
+
+{% block content %}
+<div class="pia-table-toolbar">
+    <div>
+        <h3 class="pia-page-title mb-1"><i class="bi bi-clipboard-check me-2"></i>
+            {{ 'Project Manager Evaluation Forms' if current_user.role == 'HR' else 'My Evaluation Forms' }}
+        </h3>
+        <p class="pia-page-subtitle mb-0">
+            6-Week Internship Learning &amp; Performance Evaluation records.
+        </p>
+    </div>
+    <div class="pia-table-toolbar-actions">
+        <div class="pia-table-search">
+            <i class="bi bi-search"></i>
+            <input type="text" class="form-control" data-table-search="pmEvaluationsTable"
+                   placeholder="Search by intern name&hellip;" aria-label="Search evaluations">
+            <button type="button" class="pia-search-clear" aria-label="Clear search"><i class="bi bi-x-circle"></i></button>
+        </div>
+        {% if current_user.role == 'HR' %}
+        <a href="{{ url_for('pm_evaluation.export_csv', **filters) }}" class="btn btn-outline-secondary text-nowrap">
+            <i class="bi bi-file-earmark-arrow-down me-1"></i> Export CSV
+        </a>
+        {% else %}
+        <a href="{{ url_for('pm_evaluation.add_evaluation') }}" class="btn pia-btn-primary text-nowrap">
+            <i class="bi bi-plus-circle me-1"></i> New Evaluation Form
+        </a>
+        {% endif %}
+    </div>
+</div>
+
+{% if current_user.role == 'HR' %}
+<div class="card pia-card shadow-sm mb-3">
+    <div class="card-body">
+        <form method="GET" class="row g-2 align-items-end">
+            <div class="col-md-4">
+                <label class="form-label small mb-1">Intern</label>
+                <select class="form-select form-select-sm" name="intern_id">
+                    <option value="">All</option>
+                    {% for intern in interns %}
+                    <option value="{{ intern.id }}" {{ 'selected' if filters.get('intern_id')|string == intern.id|string }}>
+                        {{ intern.full_name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label small mb-1">Project Manager</label>
+                <select class="form-select form-select-sm" name="project_manager_id">
+                    <option value="">All</option>
+                    {% for pm in project_managers %}
+                    <option value="{{ pm.id }}" {{ 'selected' if filters.get('project_manager_id')|string == pm.id|string }}>
+                        {{ pm.full_name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small mb-1">Status</label>
+                <select class="form-select form-select-sm" name="status">
+                    <option value="">All</option>
+                    <option value="finalized" {{ 'selected' if filters.get('status') == 'finalized' }}>Finalized</option>
+                    <option value="draft" {{ 'selected' if filters.get('status') == 'draft' }}>Draft</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-sm pia-btn-primary w-100">
+                    <i class="bi bi-funnel me-1"></i> Filter
+                </button>
+            </div>
+            <div class="col-12">
+                <a href="{{ url_for('pm_evaluation.list_evaluations') }}" class="small">Reset filters</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endif %}
+
+<div class="card pia-card shadow-sm">
+    <div class="pia-table-heading px-3 pt-3">
+        <h4 class="mb-0"><i class="bi bi-clipboard-check me-2"></i>Evaluation Forms</h4>
+    </div>
+    <div class="table-responsive pia-table-wrap">
+        <table class="table pia-table align-middle mb-0" id="pmEvaluationsTable" data-page-size="10">
+            <thead>
+                <tr>
+                    <th>Intern</th>
+                    <th>Project</th>
+                    <th>Project Manager</th>
+                    <th>Total Score</th>
+                    <th>Status</th>
+                    <th>Date</th>
+                    <th class="text-end">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for e in evaluations %}
+                <tr data-search="{{ e.intern.full_name | lower }}">
+                    <td class="fw-semibold">{{ e.intern.full_name }}</td>
+                    <td>{{ e.project.title }}</td>
+                    <td>{{ e.project_manager.full_name }}</td>
+                    <td style="min-width: 140px;">
+                        <div class="d-flex align-items-center gap-2">
+                            <div class="progress flex-grow-1" style="height: 8px;">
+                                <div class="progress-bar
+                                    {{ 'bg-success' if e.percentage >= 70 else 'bg-warning' if e.percentage >= 50 else 'bg-danger' }}"
+                                    style="width: {{ e.percentage }}%;"></div>
+                            </div>
+                            <small class="text-nowrap">{{ e.total_score }}/{{ e.MAX_GRAND_TOTAL }}</small>
+                        </div>
+                    </td>
+                    <td>
+                        <span class="badge {{ 'text-bg-success' if e.is_finalized else 'text-bg-secondary' }}">
+                            {{ 'Finalized' if e.is_finalized else 'Draft' }}
+                        </span>
+                    </td>
+                    <td class="text-nowrap">{{ e.evaluation_date.strftime('%d %b %Y') }}</td>
+                    <td class="text-end text-nowrap">
+                        <a href="{{ url_for('pm_evaluation.view_evaluation', evaluation_id=e.id) }}"
+                           class="btn btn-sm btn-outline-secondary" title="View">
+                            <i class="bi bi-eye"></i>
+                        </a>
+                        {% if current_user.role == 'HR' %}
+                        <form method="POST" action="{{ url_for('pm_evaluation.delete_evaluation', evaluation_id=e.id) }}"
+                              class="d-inline" onsubmit="return confirm('Delete this evaluation?');">
+                            <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </form>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% else %}
+                <tr><td colspan="7" class="text-center text-muted py-4">No evaluation forms found.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% if evaluations %}
+    <div class="pia-table-empty text-center d-none" data-empty-for="pmEvaluationsTable">
+        <i class="bi bi-search display-6 d-block mb-2"></i>
+        No evaluation forms match your search.
+    </div>
+    <div class="card-body pt-0" data-pagination-for="pmEvaluationsTable"></div>
+    {% endif %}
+</div>
+{% endblock %}

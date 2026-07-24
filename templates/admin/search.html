@@ -1,0 +1,101 @@
+{% extends 'base.html' %}
+{% block title %}Search - PIA Intern Management System{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h3 class="pia-page-title"><i class="bi bi-search me-2"></i>Search</h3>
+</div>
+
+<div class="card pia-card shadow-sm mb-4">
+    <div class="card-body">
+        <form method="GET" class="d-flex gap-2">
+            <input type="text" class="form-control" name="q" value="{{ query_text }}"
+                   placeholder="Search interns, project managers, departments, or projects..." autofocus>
+            <button type="submit" class="btn pia-btn-primary text-nowrap">
+                <i class="bi bi-search me-1"></i> Search
+            </button>
+        </form>
+    </div>
+</div>
+
+{% if query_text %}
+    {% if total_results == 0 %}
+    <div class="text-center text-muted py-5">
+        <i class="bi bi-search display-4 d-block mb-2"></i>
+        No results found for "<strong>{{ query_text }}</strong>".
+    </div>
+    {% else %}
+    <p class="text-muted mb-3">{{ total_results }} result(s) for "<strong>{{ query_text }}</strong>"</p>
+
+    {% if interns %}
+    <div class="card pia-card shadow-sm mb-3">
+        <div class="card-header pia-card-header"><i class="bi bi-mortarboard me-2"></i>Interns ({{ interns|length }})</div>
+        <ul class="list-group list-group-flush">
+            {% for i in interns %}
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+                <div>
+                    <a href="{{ url_for('intern.view_intern', intern_id=i.id) }}">{{ i.full_name }}</a>
+                    <span class="text-muted small">&mdash; {{ i.cnic }} &bull; {{ i.university }}</span>
+                </div>
+                <span class="badge text-bg-secondary">{{ i.department.name }}</span>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+
+    {% if pms %}
+    <div class="card pia-card shadow-sm mb-3">
+        <div class="card-header pia-card-header"><i class="bi bi-person-badge me-2"></i>Project Managers ({{ pms|length }})</div>
+        <ul class="list-group list-group-flush">
+            {% for pm in pms %}
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+                <div>
+                    {{ pm.full_name }}
+                    <span class="text-muted small">&mdash; {{ pm.p_number }} &bull; {{ pm.designation }}</span>
+                </div>
+                <span class="badge text-bg-secondary">{{ pm.department.name }}</span>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+
+    {% if departments %}
+    <div class="card pia-card shadow-sm mb-3">
+        <div class="card-header pia-card-header"><i class="bi bi-building me-2"></i>Departments ({{ departments|length }})</div>
+        <ul class="list-group list-group-flush">
+            {% for d in departments %}
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+                <a href="{{ url_for('department.edit_department', department_id=d.id) }}">{{ d.name }}</a>
+                <span class="badge {{ 'text-bg-success' if d.status == 'Active' else 'text-bg-secondary' }}">{{ d.status }}</span>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+
+    {% if projects %}
+    <div class="card pia-card shadow-sm mb-3">
+        <div class="card-header pia-card-header"><i class="bi bi-kanban me-2"></i>Projects ({{ projects|length }})</div>
+        <ul class="list-group list-group-flush">
+            {% for p in projects %}
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+                <div>
+                    {{ p.title }}
+                    <span class="text-muted small">&mdash; {{ p.department.name }}</span>
+                </div>
+                <span class="badge text-bg-secondary">{{ p.status }}</span>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+    {% endif %}
+{% else %}
+<div class="text-center text-muted py-5">
+    <i class="bi bi-search display-4 d-block mb-2"></i>
+    Enter a search term above to find interns, project managers, departments, or projects.
+</div>
+{% endif %}
+{% endblock %}

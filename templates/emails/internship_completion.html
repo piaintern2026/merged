@@ -1,0 +1,41 @@
+{% extends "emails/base_email.html" %}
+{% block title %}Internship Completed - PIA Intern Management System{% endblock %}
+{% block preheader %}Congratulations on completing your internship with PIA!{% endblock %}
+
+{% block body %}
+<h2 style="margin:0 0 16px 0; font-family:'Segoe UI',Arial,sans-serif; color:#01411C; font-size:20px;">
+    Congratulations, {{ intern_name }}! 🎓
+</h2>
+
+<p style="margin:0 0 16px 0; font-family:'Segoe UI',Arial,sans-serif; font-size:14px; color:#1E1E1E; line-height:1.6;">
+    Your internship journey with <strong>Pakistan International Airlines</strong> in the
+    <strong>{{ department_name }}</strong> department has been marked as complete. Your Final
+    Internship Report has been successfully received.
+</p>
+
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0"
+       style="background-color:#F8F9F7; border:1px solid #D8DCCF; border-radius:10px; margin:20px 0;">
+    <tr>
+        <td style="padding:18px 20px; font-family:'Segoe UI',Arial,sans-serif; font-size:14px; color:#1E1E1E;">
+            <p style="margin:0 0 4px 0;"><strong>Internship Period:</strong> {{ start_date }} &ndash; {{ end_date }}</p>
+            <p style="margin:0;"><strong>Final Report:</strong> {{ report_title }}</p>
+        </td>
+    </tr>
+</table>
+
+<p style="margin:0 0 20px 0; font-family:'Segoe UI',Arial,sans-serif; font-size:14px; color:#1E1E1E; line-height:1.6;">
+    Thank you for your hard work and dedication. HR will follow up regarding your final evaluation
+    and any next steps. We wish you the very best in your future endeavors.
+</p>
+
+<table role="presentation" cellpadding="0" cellspacing="0">
+    <tr>
+        <td style="border-radius:8px; background-color:#01411C;">
+            <a href="{{ report_url }}" target="_blank"
+               style="display:inline-block; padding:12px 28px; font-family:'Segoe UI',Arial,sans-serif; font-size:14px; font-weight:600; color:#FFFFFF; text-decoration:none; border-radius:8px;">
+                View My Report
+            </a>
+        </td>
+    </tr>
+</table>
+{% endblock %}

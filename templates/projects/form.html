@@ -1,0 +1,138 @@
+{% extends 'base.html' %}
+{% block title %}{{ 'Edit' if project else 'Create' }} Project - PIA Intern Management System{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h3 class="pia-page-title">
+        <i class="bi bi-kanban me-2"></i>{{ 'Edit' if project else 'Create' }} Project
+    </h3>
+    <a href="{{ url_for('project.list_projects') }}" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left me-1"></i> Back to List
+    </a>
+</div>
+
+{% set data = form if form else project %}
+<div class="card pia-card shadow-sm">
+    <div class="card-body p-4">
+        <form method="POST" novalidate>
+            <div class="row g-3">
+                <div class="col-12">
+                    <label class="form-label">Project Title <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" name="title" required
+                           value="{{ data.title if data else '' }}">
+                </div>
+                <div class="col-12">
+                    <label class="form-label">Description</label>
+                    <textarea class="form-control" name="description" rows="4"
+                              >{{ data.description if data else '' }}</textarea>
+                </div>
+
+                {% if is_pm %}
+                <!-- PM tasks are auto-scoped to their own department & self as manager -->
+                <input type="hidden" name="department_id" value="{{ departments[0].id if departments else '' }}">
+                <input type="hidden" name="assigned_manager_id" value="{{ managers[0].id if managers else '' }}">
+                <div class="col-md-6">
+                    <label class="form-label">Department</label>
+                    <input type="text" class="form-control" value="{{ departments[0].name if departments else '' }}" disabled readonly>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Priority <span class="text-danger">*</span></label>
+                    <select class="form-select" name="priority" required>
+                        {% for p in priorities %}
+                        <option value="{{ p }}"
+                            {{ 'selected' if (project and project.priority == p) or (not project and p == 'Medium') }}>
+                            {{ p }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label">Assigned Manager</label>
+                    <input type="text" class="form-control" value="{{ managers[0].full_name if managers else '' }}" disabled readonly>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Assigned Intern</label>
+                    <select class="form-select" name="assigned_intern_id">
+                        <option value="">Unassigned</option>
+                        {% for intern in interns %}
+                        <option value="{{ intern.id }}"
+                            {{ 'selected' if project and project.assigned_intern_id == intern.id }}>{{ intern.full_name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                {% else %}
+                <div class="col-md-6">
+                    <label class="form-label">Department <span class="text-danger">*</span></label>
+                    <select class="form-select" name="department_id" required>
+                        <option value="" disabled {{ 'selected' if not project }}>Select department</option>
+                        {% for dept in departments %}
+                        <option value="{{ dept.id }}"
+                            {{ 'selected' if project and project.department_id == dept.id }}>{{ dept.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Priority <span class="text-danger">*</span></label>
+                    <select class="form-select" name="priority" required>
+                        {% for p in priorities %}
+                        <option value="{{ p }}"
+                            {{ 'selected' if (project and project.priority == p) or (not project and p == 'Medium') }}>
+                            {{ p }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label">Assigned Manager</label>
+                    <select class="form-select" name="assigned_manager_id">
+                        <option value="">Unassigned</option>
+                        {% for mgr in managers %}
+                        <option value="{{ mgr.id }}"
+                            {{ 'selected' if project and project.assigned_manager_id == mgr.id }}>{{ mgr.full_name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Assigned Intern</label>
+                    <select class="form-select" name="assigned_intern_id">
+                        <option value="">Unassigned</option>
+                        {% for intern in interns %}
+                        <option value="{{ intern.id }}"
+                            {{ 'selected' if project and project.assigned_intern_id == intern.id }}>{{ intern.full_name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                {% endif %}
+
+                <div class="col-md-4">
+                    <label class="form-label">Start Date <span class="text-danger">*</span></label>
+                    <input type="date" class="form-control" name="start_date" required
+                           value="{{ project.start_date if project else '' }}">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Deadline <span class="text-danger">*</span></label>
+                    <input type="date" class="form-control" name="deadline" required
+                           value="{{ project.deadline if project else '' }}">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Status</label>
+                    <select class="form-select" name="status">
+                        {% for s in (['Pending', 'Working', 'Submitted'] if is_pm else statuses) %}
+                        <option value="{{ s }}"
+                            {{ 'selected' if (project and project.status == s) or (not project and s == 'Pending') }}>
+                            {{ s }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            <button type="submit" class="btn pia-btn-primary mt-4">
+                <i class="bi bi-check-circle me-1"></i> {{ 'Update' if project else 'Save' }} Project
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %}

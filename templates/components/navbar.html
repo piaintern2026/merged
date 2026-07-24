@@ -1,0 +1,104 @@
+<!--
+    components/navbar.html
+    -----------------------
+    Top navigation bar: brand, sidebar toggles, search, breadcrumb,
+    date, dark-mode toggle, notifications, and user menu.
+-->
+<nav class="navbar navbar-expand pia-navbar">
+    <div class="container-fluid">
+        <!-- Sidebar toggle for small screens -->
+        <button class="btn pia-toggle-btn d-lg-none me-1" id="sidebarToggle" type="button" aria-label="Toggle sidebar">
+            <i class="bi bi-list fs-4"></i>
+        </button>
+        <!-- Collapse toggle for large screens -->
+        <button class="btn pia-toggle-btn d-none d-lg-inline-flex me-2" id="sidebarCollapseToggle" type="button" aria-label="Collapse sidebar">
+            <i class="bi bi-layout-sidebar-inset fs-5"></i>
+        </button>
+
+        <a class="navbar-brand d-flex align-items-center me-3" href="{{ url_for('dashboard.index') }}">
+            <img src="{{ url_for('static', filename='images/pia-logo.png') }}" alt="Pakistan International Airlines" class="pia-logo-navbar">
+        </a>
+
+        <!-- Search -->
+        <div class="pia-search d-none d-md-block">
+            <i class="bi bi-search"></i>
+            <input type="text" placeholder="Search interns, projects, reports..." aria-label="Search">
+        </div>
+
+        <!-- Breadcrumb (hidden on small screens) -->
+        <nav aria-label="breadcrumb" class="pia-breadcrumb d-none d-xl-flex align-items-center ms-4">
+            <a href="{{ url_for('dashboard.index') }}"><i class="bi bi-house-door"></i></a>
+            {% if request.endpoint and request.endpoint != 'dashboard.index' %}
+                <span class="mx-2">/</span>
+                <span class="active">{{ (request.endpoint.split('.')[-1] | replace('_', ' ')) | title }}</span>
+            {% endif %}
+        </nav>
+
+        <div class="ms-auto d-flex align-items-center gap-2">
+            <!-- Current date -->
+            <span class="pia-navbar-date d-none d-lg-inline-flex align-items-center me-1" id="pia-current-date">
+                <i class="bi bi-calendar3 me-1"></i><span id="pia-current-date-text"></span>
+            </span>
+
+            <!-- Role badge -->
+            <span class="pia-role-badge d-none d-sm-inline-block me-1">{{ current_user.role|display_role }}</span>
+
+            <!-- Dark mode toggle -->
+            <button class="pia-icon-btn" id="themeToggle" type="button" title="Toggle dark mode" aria-label="Toggle dark mode">
+                <i class="bi bi-moon-stars" id="themeToggleIcon"></i>
+            </button>
+
+            <!-- Notification bell (all roles) -->
+            <div class="dropdown" id="pia-notif-dropdown-wrap">
+                <button class="pia-icon-btn pia-bell-btn" id="pia-notif-toggle" type="button"
+                        data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false" title="Notifications">
+                    <i class="bi bi-bell"></i>
+                    {% set unread = current_user.notifications | selectattr('is_read', 'equalto', false) | list | length %}
+                    <span class="pia-notif-badge {{ 'd-none' if unread == 0 }}" id="pia-notif-badge">{{ unread if unread <= 9 else '9+' }}</span>
+                </button>
+                <div class="dropdown-menu dropdown-menu-end pia-notif-dropdown shadow" id="pia-notif-menu">
+                    <div class="pia-notif-header">
+                        <span class="title"><i class="bi bi-bell-fill me-1"></i> Notifications</span>
+                        <button type="button" id="pia-notif-mark-all">Mark all read</button>
+                    </div>
+                    <div class="pia-notif-body" id="pia-notif-body">
+                        <div class="pia-notif-loading">
+                            <div class="spinner-border spinner-border-sm text-success me-2" role="status"></div>
+                            Loading notifications&hellip;
+                        </div>
+                    </div>
+                    <div class="pia-notif-footer">
+                        <a href="{{ url_for('notification.list_notifications') }}">View all notifications</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- User dropdown -->
+            <div class="dropdown">
+                <button class="btn pia-user-btn dropdown-toggle d-flex align-items-center" type="button"
+                        data-bs-toggle="dropdown" aria-expanded="false">
+                    {% if current_user.profile_picture %}
+                        <img src="{{ url_for('static', filename='uploads/profile_pics/' ~ current_user.profile_picture) }}"
+                             class="pia-avatar me-2" alt="Profile picture">
+                    {% else %}
+                        <span class="pia-avatar pia-avatar-placeholder me-2">
+                            {{ current_user.display_name()[0]|upper }}
+                        </span>
+                    {% endif %}
+                    <span class="d-none d-md-inline">
+                        {{ current_user.display_name() }}
+                        <small class="d-block text-muted" style="font-size: 0.72rem;">{{ current_user.role|display_role }}</small>
+                    </span>
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end shadow">
+                    <li><h6 class="dropdown-header">{{ current_user.email }}</h6></li>
+                    <li><a class="dropdown-item" href="{{ url_for('auth.change_password') }}">
+                        <i class="bi bi-key-fill me-2"></i>Change Password</a></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="dropdown-item text-danger" href="{{ url_for('auth.logout') }}">
+                        <i class="bi bi-box-arrow-right me-2"></i>Logout</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</nav>

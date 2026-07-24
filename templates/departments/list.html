@@ -1,0 +1,142 @@
+{% extends 'base.html' %}
+{% block title %}Departments - PIA Intern Management System{% endblock %}
+
+{% block content %}
+<div class="pia-table-toolbar">
+    <div>
+        <h3 class="pia-page-title mb-1"><i class="bi bi-building me-2"></i>Departments</h3>
+        <p class="pia-page-subtitle mb-0">View and manage all organizational departments, their status, and staffing levels.</p>
+    </div>
+    <div class="pia-table-toolbar-actions">
+        <div class="pia-table-search">
+            <i class="bi bi-search"></i>
+            <input type="text" class="form-control" data-table-search="departmentsTable"
+                   placeholder="Search by department name&hellip;" aria-label="Search departments">
+            <button type="button" class="pia-search-clear" aria-label="Clear search"><i class="bi bi-x-circle"></i></button>
+        </div>
+        {% if current_user.role == 'Super Admin' %}
+        <a href="{{ url_for('department.add_department') }}" class="btn pia-btn-primary text-nowrap">
+            <i class="bi bi-plus-circle me-1"></i> Add Department
+        </a>
+        {% endif %}
+    </div>
+</div>
+
+<!-- City filter / sort bar -->
+<div class="card pia-card shadow-sm mb-3">
+    <div class="card-body">
+        <form method="GET" class="row g-2 align-items-end">
+            <div class="col-md-3">
+                <label class="form-label small mb-1">City</label>
+                <select class="form-select form-select-sm" name="city">
+                    <option value="">All Cities</option>
+                    {% for c in cities %}
+                    <option value="{{ c }}" {{ 'selected' if selected_city == c }}>{{ c }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label small mb-1">Sort By</label>
+                <select class="form-select form-select-sm" name="sort">
+                    <option value="name_asc" {{ 'selected' if selected_sort == 'name_asc' }}>Name (A&ndash;Z)</option>
+                    <option value="name_desc" {{ 'selected' if selected_sort == 'name_desc' }}>Name (Z&ndash;A)</option>
+                    <option value="city_asc" {{ 'selected' if selected_sort == 'city_asc' }}>City (A&ndash;Z)</option>
+                    <option value="city_desc" {{ 'selected' if selected_sort == 'city_desc' }}>City (Z&ndash;A)</option>
+                    <option value="status_asc" {{ 'selected' if selected_sort == 'status_asc' }}>Status (A&ndash;Z)</option>
+                    <option value="status_desc" {{ 'selected' if selected_sort == 'status_desc' }}>Status (Z&ndash;A)</option>
+                </select>
+            </div>
+            <div class="col-md-auto">
+                <button type="submit" class="btn btn-sm pia-btn-primary">
+                    <i class="bi bi-funnel me-1"></i> Apply
+                </button>
+                {% if selected_city or selected_sort != 'name_asc' %}
+                <a href="{{ url_for('department.list_departments') }}" class="btn btn-sm btn-outline-secondary">Reset</a>
+                {% endif %}
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card pia-card shadow-sm">
+    <div class="pia-table-heading px-3 pt-3">
+        <h4 class="mb-0"><i class="bi bi-building me-2"></i>Department List</h4>
+    </div>
+    <div class="table-responsive pia-table-wrap">
+        <table class="table pia-table align-middle mb-0" id="departmentsTable" data-page-size="10">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Name</th>
+                    <th>City</th>
+                    <th>Description</th>
+                    <th>Status</th>
+                    <th>PMs / Interns</th>
+                    <th class="text-end">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for dept in departments %}
+                <tr data-search="{{ dept.name | lower }} {{ (dept.city or '') | lower }}">
+                    <td>{{ loop.index }}</td>
+                    <td class="fw-semibold">{{ dept.name }}</td>
+                    <td>{{ dept.city or '—' }}</td>
+                    <td class="text-muted">{{ dept.description or '—' }}</td>
+                    <td>
+                        <span class="badge {{ 'text-bg-success' if dept.status == 'Active' else 'text-bg-secondary' }}">
+                            {{ dept.status }}
+                        </span>
+                    </td>
+                    <td>{{ dept.project_managers|length }} / {{ dept.interns|length }}</td>
+                    <td class="text-end">
+                        {% if current_user.role == 'Super Admin' %}
+                        <a href="{{ url_for('department.edit_department', department_id=dept.id) }}"
+                           class="btn btn-sm btn-outline-primary" title="Edit">
+                            <i class="bi bi-pencil-square"></i>
+                        </a>
+                        <button type="button" class="btn btn-sm btn-outline-danger"
+                                data-bs-toggle="modal" data-bs-target="#deleteModal{{ dept.id }}" title="Delete">
+                            <i class="bi bi-trash"></i>
+                        </button>
+
+                        <!-- Delete confirmation modal -->
+                        <div class="modal fade" id="deleteModal{{ dept.id }}" tabindex="-1">
+                            <div class="modal-dialog modal-dialog-centered">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title">Confirm Deletion</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        Are you sure you want to delete department
+                                        <strong>{{ dept.name }}</strong>? This action cannot be undone.
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                        <form method="POST" action="{{ url_for('department.delete_department', department_id=dept.id) }}">
+                                            <button type="submit" class="btn btn-danger">Delete</button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% else %}
+                        &mdash;
+                        {% endif %}
+                    </td>
+                </tr>
+                {% else %}
+                <tr><td colspan="7" class="text-center text-muted py-4">No departments found.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% if departments %}
+    <div class="pia-table-empty text-center d-none" data-empty-for="departmentsTable">
+        <i class="bi bi-search display-6 d-block mb-2"></i>
+        No departments match your search.
+    </div>
+    <div class="card-body pt-0" data-pagination-for="departmentsTable"></div>
+    {% endif %}
+</div>
+{% endblock %}

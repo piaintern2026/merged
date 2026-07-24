@@ -1,0 +1,115 @@
+{% extends 'base.html' %}
+{% block title %}Submit Evaluation - PIA Intern Management System{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h3 class="pia-page-title">
+        <i class="bi bi-clipboard-check me-2"></i>
+        {{ 'Submit HR Final Evaluation' if evaluation_type == 'HR Final' else 'Evaluate an Intern' }}
+    </h3>
+    <a href="{{ url_for('evaluation.list_evaluations') }}" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left me-1"></i> Back to List
+    </a>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        {% if not interns %}
+        <div class="alert alert-warning">
+            <i class="bi bi-exclamation-circle me-1"></i>
+            {% if evaluation_type == 'Project Manager' %}
+            You don't have any interns assigned to your projects yet, so there is no one to evaluate.
+            {% else %}
+            No interns are registered yet.
+            {% endif %}
+        </div>
+        {% else %}
+        <div class="card pia-card shadow-sm">
+            <div class="card-body p-4">
+                <form method="POST" novalidate id="evaluationForm">
+                    <div class="mb-4">
+                        <label class="form-label">Intern <span class="text-danger">*</span></label>
+                        <select class="form-select" name="intern_id" required>
+                            <option value="" disabled selected>Select an intern to evaluate</option>
+                            {% for i in interns %}
+                            <option value="{{ i.id }}" {{ 'selected' if form and form.get('intern_id')|string == i.id|string }}>
+                                {{ i.full_name }} &mdash; {{ i.department.name }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                        <div class="form-text">
+                            Evaluation type: <strong>{{ evaluation_type }}</strong>
+                            {% if evaluation_type == 'HR Final' %}
+                                (submitting again for the same intern will update their existing final evaluation)
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <h6 class="pia-form-section">Scoring Criteria (1&ndash;10 each)</h6>
+                    <div class="row g-3 mb-3">
+                        {% for field_name, label in criteria %}
+                        <div class="col-md-6">
+                            <label class="form-label d-flex justify-content-between">
+                                <span>{{ label }}</span>
+                                <span class="fw-bold pia-score-display" data-for="{{ field_name }}">
+                                    {{ (form.get(field_name) if form else 5) }}
+                                </span>
+                            </label>
+                            <input type="range" class="form-range pia-score-slider" name="{{ field_name }}"
+                                   min="1" max="10" step="1"
+                                   value="{{ form.get(field_name) if form else 5 }}"
+                                   data-target="{{ field_name }}" required>
+                        </div>
+                        {% endfor %}
+                    </div>
+
+                    <div class="pia-total-score-box mb-4">
+                        <span>Total Score</span>
+                        <span><strong id="totalScoreDisplay">30</strong> / 60 (<span id="totalPercentDisplay">50</span>%)</span>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label">Remarks</label>
+                        <textarea class="form-control" name="remarks" rows="4"
+                                  placeholder="Overall comments about this intern's performance...">{{ form.get('remarks') if form else '' }}</textarea>
+                    </div>
+
+                    <button type="submit" class="btn pia-btn-primary">
+                        <i class="bi bi-check-circle me-1"></i> Submit Evaluation
+                    </button>
+                </form>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    // Live-update each score label and the running total as sliders move.
+    document.addEventListener('DOMContentLoaded', function () {
+        const sliders = document.querySelectorAll('.pia-score-slider');
+        const totalScoreEl = document.getElementById('totalScoreDisplay');
+        const totalPercentEl = document.getElementById('totalPercentDisplay');
+
+        function recalcTotal() {
+            let total = 0;
+            sliders.forEach(function (slider) {
+                total += parseInt(slider.value, 10);
+                const label = document.querySelector(
+                    '.pia-score-display[data-for="' + slider.dataset.target + '"]'
+                );
+                if (label) label.textContent = slider.value;
+            });
+            totalScoreEl.textContent = total;
+            totalPercentEl.textContent = Math.round((total / (sliders.length * 10)) * 100);
+        }
+
+        sliders.forEach(function (slider) {
+            slider.addEventListener('input', recalcTotal);
+        });
+        recalcTotal();
+    });
+</script>
+{% endblock %}

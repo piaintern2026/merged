@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+{% block title %}Settings - PIA Intern Management System{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h3 class="pia-page-title"><i class="bi bi-gear me-2"></i>System Settings</h3>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card pia-card shadow-sm">
+            <div class="card-body p-4">
+                <form method="POST" novalidate>
+                    {% for setting in settings_list %}
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold" for="setting_{{ setting.key }}">{{ setting.label }}</label>
+                        {% if setting.description %}
+                        <div class="form-text mb-1">{{ setting.description }}</div>
+                        {% endif %}
+
+                        {% if setting.value in ['true', 'false'] %}
+                        <select class="form-select" id="setting_{{ setting.key }}" name="{{ setting.key }}">
+                            <option value="true" {{ 'selected' if setting.value == 'true' }}>Enabled</option>
+                            <option value="false" {{ 'selected' if setting.value == 'false' }}>Disabled</option>
+                        </select>
+                        {% else %}
+                        <input type="text" class="form-control" id="setting_{{ setting.key }}"
+                               name="{{ setting.key }}" value="{{ setting.value or '' }}">
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+
+                    <button type="submit" class="btn pia-btn-primary">
+                        <i class="bi bi-check-circle me-1"></i> Save Settings
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

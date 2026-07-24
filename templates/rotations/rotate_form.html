@@ -1,0 +1,127 @@
+{% extends 'base.html' %}
+{% block title %}Rotate {{ intern.full_name }} - PIA Intern Management System{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h3 class="pia-page-title"><i class="bi bi-arrow-left-right me-2"></i>Rotate Intern</h3>
+    <a href="{{ url_for('intern.view_intern', intern_id=intern.id) }}" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left me-1"></i> Back to Intern
+    </a>
+</div>
+
+{% set data = form %}
+<div class="row g-3">
+    <div class="col-lg-4">
+        <div class="card pia-card shadow-sm">
+            <div class="card-header pia-card-header"><i class="bi bi-person-badge me-2"></i>Current Assignment</div>
+            <div class="card-body">
+                <dl class="row mb-0">
+                    <dt class="col-6">Intern</dt><dd class="col-6">{{ intern.full_name }}</dd>
+                    <dt class="col-6">Department</dt><dd class="col-6">{{ intern.department.name }}</dd>
+                    <dt class="col-6">Manager</dt>
+                    <dd class="col-6">{{ current_manager.full_name if current_manager else 'Not yet assigned' }}</dd>
+                    <dt class="col-6">Internship Ends</dt>
+                    <dd class="col-6">{{ intern.internship_end_date.strftime('%d %b %Y') }}</dd>
+                </dl>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-8">
+        <div class="card pia-card shadow-sm">
+            <div class="card-body p-4">
+                <form method="POST" novalidate>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">To Department <span class="text-danger">*</span></label>
+                            <select class="form-select" name="to_department_id" id="toDepartment" required>
+                                <option value="" disabled {{ 'selected' if not data }}>Select department</option>
+                                {% for d in departments %}
+                                <option value="{{ d.id }}" {{ 'selected' if data and data.to_department_id|string == d.id|string }}>
+                                    {{ d.name }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">To Manager <span class="text-danger">*</span></label>
+                            <select class="form-select" name="to_manager_id" id="toManager" required>
+                                <option value="" disabled {{ 'selected' if not data }}>Select manager</option>
+                                {% for m in managers %}
+                                <option value="{{ m.id }}" data-department="{{ m.department_id }}"
+                                    {{ 'selected' if data and data.to_manager_id|string == m.id|string }}>
+                                    {{ m.full_name }} &mdash; {{ m.department.name }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                            <small class="text-muted">Must belong to the selected target department.</small>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label">Assigned Project</label>
+                            <select class="form-select" name="project_id">
+                                <option value="">No project (assign later)</option>
+                                {% for p in projects %}
+                                <option value="{{ p.id }}" {{ 'selected' if data and data.project_id|string == p.id|string }}>
+                                    {{ p.title }} ({{ p.department.name }})
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Rotation Start Date <span class="text-danger">*</span></label>
+                            <input type="date" class="form-control" name="start_date" required
+                                   value="{{ data.start_date if data else '' }}">
+                        </div>
+
+                        <div class="col-12">
+                            <label class="form-label">Reason for Rotation <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" name="reason" maxlength="255" required
+                                   placeholder="e.g. Cross-functional exposure, project completion, skills development"
+                                   value="{{ data.reason if data else '' }}">
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Remarks</label>
+                            <textarea class="form-control" name="remarks" rows="3"
+                                      placeholder="Optional additional notes">{{ data.remarks if data else '' }}</textarea>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-info mt-3 mb-0 small">
+                        <i class="bi bi-info-circle me-1"></i>
+                        Rotating this intern will automatically close their current assignment
+                        (<strong>{{ intern.department.name }}</strong>{% if current_manager %} under {{ current_manager.full_name }}{% endif %})
+                        and create a permanent rotation history record.
+                    </div>
+
+                    <button type="submit" class="btn pia-btn-primary mt-4">
+                        <i class="bi bi-check-circle me-1"></i> Confirm Rotation
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Only show managers that belong to the currently selected target department.
+(function () {
+    const deptSelect = document.getElementById('toDepartment');
+    const mgrSelect = document.getElementById('toManager');
+    const mgrOptions = Array.from(mgrSelect.options);
+
+    function filterManagers() {
+        const deptId = deptSelect.value;
+        mgrSelect.innerHTML = '';
+        mgrOptions.forEach(function (opt) {
+            if (!opt.value || opt.dataset.department === deptId) {
+                mgrSelect.appendChild(opt.cloneNode(true));
+            }
+        });
+    }
+
+    deptSelect.addEventListener('change', filterManagers);
+    if (deptSelect.value) filterManagers();
+})();
+</script>
+{% endblock %}

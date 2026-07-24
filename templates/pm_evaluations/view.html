@@ -1,0 +1,127 @@
+{% extends 'base.html' %}
+{% block title %}PM Evaluation - {{ evaluation.intern.full_name }}{% endblock %}
+
+{% block extra_head %}
+<style>
+    @media print {
+        .app-shell > aside, .pia-navbar, .no-print { display: none !important; }
+        .app-content { margin: 0 !important; }
+        .card { border: 1px solid #ccc !important; box-shadow: none !important; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4 no-print">
+    <h3 class="pia-page-title"><i class="bi bi-clipboard-check me-2"></i>Project Manager Evaluation Form</h3>
+    <div class="d-flex gap-2">
+        <a href="{{ url_for('pm_evaluation.list_evaluations') }}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-1"></i> Back
+        </a>
+        <button type="button" class="btn btn-outline-secondary" onclick="window.print()">
+            <i class="bi bi-printer me-1"></i> Print
+        </button>
+        {% if can_edit %}
+        <a href="{{ url_for('pm_evaluation.edit_evaluation', evaluation_id=evaluation.id) }}" class="btn pia-btn-primary">
+            <i class="bi bi-pencil me-1"></i> Edit
+        </a>
+        {% if not evaluation.is_finalized %}
+        <form method="POST" action="{{ url_for('pm_evaluation.finalize_evaluation', evaluation_id=evaluation.id) }}"
+              onsubmit="return confirm('Finalize this evaluation? It will be locked for further edits.');">
+            <button type="submit" class="btn btn-success">
+                <i class="bi bi-lock-fill me-1"></i> Finalize
+            </button>
+        </form>
+        {% endif %}
+        {% endif %}
+    </div>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-lg-10">
+        <div class="card pia-card shadow-sm mb-3">
+            <div class="card-body p-4">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div>
+                        <h4 class="mb-1">{{ evaluation.intern.full_name }}</h4>
+                        <p class="text-muted mb-1">{{ evaluation.project.title }}</p>
+                        <span class="badge {{ 'text-bg-success' if evaluation.is_finalized else 'text-bg-secondary' }}">
+                            {{ 'Finalized' if evaluation.is_finalized else 'Draft' }}
+                        </span>
+                    </div>
+                    <div class="text-end">
+                        <div class="fs-3 fw-bold text-primary">{{ evaluation.total_score }}/{{ evaluation.MAX_GRAND_TOTAL }}</div>
+                        <div class="text-muted small">{{ evaluation.percentage }}%</div>
+                    </div>
+                </div>
+
+                <dl class="row mb-4">
+                    <dt class="col-3">Project Manager</dt><dd class="col-9">{{ evaluation.project_manager.full_name }}</dd>
+                    <dt class="col-3">Evaluation Date</dt><dd class="col-9">{{ evaluation.evaluation_date.strftime('%d %b %Y') }}</dd>
+                    <dt class="col-3">Submitted</dt><dd class="col-9">{{ evaluation.created_at.strftime('%d %b %Y, %I:%M %p') }}</dd>
+                    {% if evaluation.recommendation %}
+                    <dt class="col-3">Recommendation</dt><dd class="col-9">{{ evaluation.recommendation }}</dd>
+                    {% endif %}
+                </dl>
+
+                <h6 class="pia-form-section">Weekly Activities &amp; Supervisor Evaluation</h6>
+                <div class="table-responsive mb-4">
+                    <table class="table table-bordered align-middle pia-table">
+                        <thead>
+                            <tr>
+                                <th>Week</th>
+                                <th>Activity / Assignment</th>
+                                <th>Learning Objective</th>
+                                <th>Expected Learning Outcome</th>
+                                <th class="text-center">Rating</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for w in evaluation.WEEKS %}
+                            {% set score = evaluation|attr(w.field) %}
+                            <tr>
+                                <td class="fw-semibold">Week {{ w.number }}</td>
+                                <td>{{ w.activity }}</td>
+                                <td class="small text-muted">{{ w.objective }}</td>
+                                <td class="small text-muted">{{ w.outcome }}</td>
+                                <td class="text-center">
+                                    {% if score %}
+                                    <span class="badge text-bg-primary">{{ score }}/5</span>
+                                    {% else %}
+                                    <span class="text-muted small">Not rated</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <h6 class="pia-form-section">Competency Scorecard</h6>
+                {% for field_name, label in evaluation.COMPETENCIES %}
+                {% set score = evaluation|attr(field_name) %}
+                <div class="mb-2">
+                    <div class="d-flex justify-content-between small mb-1">
+                        <span>{{ label }}</span>
+                        <span class="fw-semibold">{{ score }}/5{% if not score %}<span class="text-muted"> &mdash; Not rated</span>{% endif %}</span>
+                    </div>
+                    <div class="progress" style="height: 8px;">
+                        <div class="progress-bar
+                            {{ 'bg-success' if score and score >= 4
+                               else 'bg-warning' if score and score >= 3
+                               else 'bg-danger' if score
+                               else 'bg-secondary' }}"
+                            style="width: {{ (score * 20) if score else 0 }}%;"></div>
+                    </div>
+                </div>
+                {% endfor %}
+
+                {% if evaluation.remarks %}
+                <h6 class="pia-form-section mt-4">Remarks</h6>
+                <p class="text-muted mb-0">{{ evaluation.remarks }}</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

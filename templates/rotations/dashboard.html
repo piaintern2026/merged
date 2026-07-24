@@ -1,0 +1,124 @@
+{% extends 'base.html' %}
+{% block title %}Rotation Dashboard - PIA Intern Management System{% endblock %}
+
+{% block extra_head %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+    <h3 class="pia-page-title"><i class="bi bi-graph-up me-2"></i>Rotation Dashboard</h3>
+    <a href="{{ url_for('rotation.list_rotations') }}" class="btn btn-outline-secondary">
+        <i class="bi bi-list-ul me-1"></i> View Rotation History
+    </a>
+</div>
+
+<div class="row g-3 mb-3">
+    <div class="col-md-4">
+        <div class="card pia-stat-card border-0 shadow-sm">
+            <div class="card-body">
+                <div class="pia-stat-label mb-1">Total Rotations</div>
+                <div class="fs-3 fw-bold">{{ total_rotations }}</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card pia-stat-card border-0 shadow-sm">
+            <div class="card-body">
+                <div class="pia-stat-label mb-1">Interns Rotated</div>
+                <div class="fs-3 fw-bold">{{ total_interns_rotated }}</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card pia-stat-card border-0 shadow-sm">
+            <div class="card-body">
+                <div class="pia-stat-label mb-1">Most Rotated Intern</div>
+                {% if most_rotated_intern %}
+                <div class="fw-semibold">{{ most_rotated_intern.full_name }}</div>
+                <span class="text-muted small">{{ most_rotated_count }} rotation(s)</span>
+                {% else %}
+                <span class="text-muted">No rotations yet</span>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3 mb-3">
+    <div class="col-lg-6">
+        <div class="card pia-card shadow-sm h-100">
+            <div class="card-header pia-card-header"><i class="bi bi-clock-history me-2"></i>Department-wise Time Spent (days)</div>
+            <div class="card-body">
+                {% if rows %}
+                <canvas id="chartDeptTime" height="240"></canvas>
+                {% else %}
+                <div class="text-center text-muted py-5">No data available yet.</div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="card pia-card shadow-sm h-100">
+            <div class="card-header pia-card-header"><i class="bi bi-arrow-left-right me-2"></i>Department-wise Rotation Count</div>
+            <div class="card-body">
+                {% if rows %}
+                <canvas id="chartDeptRotations" height="240"></canvas>
+                {% else %}
+                <div class="text-center text-muted py-5">No data available yet.</div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card pia-card shadow-sm">
+    <div class="card-header pia-card-header"><h4 class="mb-0 fs-6"><i class="bi bi-building me-2"></i>Department Rotation Summary</h4></div>
+    <div class="table-responsive pia-table-wrap">
+        <table class="table pia-table align-middle mb-0">
+            <thead>
+                <tr>
+                    <th>Department</th>
+                    <th>Time Spent (days)</th>
+                    <th>Projects Completed</th>
+                    <th>Total Rotations Into</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in rows %}
+                <tr>
+                    <td class="fw-semibold">{{ row.department.name }}</td>
+                    <td>{{ row.days_spent }}</td>
+                    <td>{{ row.projects_completed }}</td>
+                    <td>{{ row.rotation_count }}</td>
+                </tr>
+                {% else %}
+                <tr><td colspan="4" class="text-center text-muted py-4">No departments found.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+const chartData = {{ chart_data|tojson }};
+if (chartData.labels.length) {
+    const labels = chartData.labels;
+    const timeData = chartData.days_spent;
+    const rotationData = chartData.rotation_count;
+    const palette = ['#0b3d63', '#1c6ea4', '#2e94c4', '#6ec6e6', '#c9a227', '#8a6d1f', '#4d4d4d', '#8c8c8c'];
+
+    new Chart(document.getElementById('chartDeptTime'), {
+        type: 'bar',
+        data: { labels: labels, datasets: [{ label: 'Days Spent', data: timeData, backgroundColor: palette }] },
+        options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
+    });
+
+    new Chart(document.getElementById('chartDeptRotations'), {
+        type: 'doughnut',
+        data: { labels: labels, datasets: [{ data: rotationData, backgroundColor: palette }] },
+        options: { plugins: { legend: { position: 'bottom' } } }
+    });
+}
+</script>
+{% endblock %}

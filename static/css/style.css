@@ -1,0 +1,1238 @@
+/*
+  style.css
+  ---------
+  PIA Corporate HRMS Design System
+  Inspired by Pakistan International Airlines' premium green & gold identity.
+  Built on top of Bootstrap 5 utility classes -- variables below override
+  Bootstrap's theme colors so utility classes (bg-primary-subtle, text-success,
+  badges, alerts, etc.) automatically pick up the new palette across every
+  template, with zero changes to backend/routes/Jinja logic.
+*/
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+:root {
+    /* ---- PIA brand palette ---- */
+    --pia-green: #01411C;
+    --pia-green-dark: #0B2E13;
+    --pia-green-secondary: #1F5F3A;
+    --pia-gold: #C9A227;
+    --pia-gold-light: #E3C567;
+    --pia-white: #FFFFFF;
+    --pia-bg: #F8F9F7;
+    --pia-sidebar: #0B2E13;
+    --pia-card: #FFFFFF;
+    --pia-border: #D8DCCF;
+    --pia-text: #1E1E1E;
+    --pia-text-secondary: #5E6A61;
+    --pia-success: #2E7D32;
+    --pia-warning: #C9A227;
+    --pia-danger: #C62828;
+    --pia-info: #1F5F3A;
+
+    --pia-sidebar-width: 268px;
+    --pia-sidebar-width-collapsed: 84px;
+    --pia-radius: 14px;
+    --pia-radius-sm: 10px;
+    --pia-shadow-sm: 0 2px 8px rgba(11, 46, 19, 0.06);
+    --pia-shadow: 0 8px 24px rgba(11, 46, 19, 0.08);
+    --pia-shadow-lg: 0 16px 40px rgba(11, 46, 19, 0.14);
+
+    /* ---- Bootstrap theme overrides (drives *-subtle, badges, alerts, etc.) ---- */
+    --bs-primary: var(--pia-green);
+    --bs-primary-rgb: 1, 65, 28;
+    --bs-secondary: var(--pia-text-secondary);
+    --bs-secondary-rgb: 94, 106, 97;
+    --bs-success: var(--pia-success);
+    --bs-success-rgb: 46, 125, 50;
+    --bs-info: var(--pia-green-secondary);
+    --bs-info-rgb: 31, 95, 58;
+    --bs-warning: var(--pia-gold);
+    --bs-warning-rgb: 201, 162, 39;
+    --bs-danger: var(--pia-danger);
+    --bs-danger-rgb: 198, 40, 40;
+    --bs-body-font-family: 'Inter', -apple-system, 'Segoe UI', sans-serif;
+    --bs-border-radius: var(--pia-radius-sm);
+    --bs-border-radius-lg: var(--pia-radius);
+    --bs-link-color: var(--pia-green-secondary);
+    --bs-link-hover-color: var(--pia-green);
+}
+
+/* ===================== DARK MODE ===================== */
+[data-theme="dark"] {
+    --pia-bg: #0E1712;
+    --pia-card: #142219;
+    --pia-border: #24352A;
+    --pia-text: #F1F3EF;
+    --pia-text-secondary: #9DAA9F;
+    /*
+     * IMPORTANT: --pia-white must NOT be redefined here.
+     *
+     * It's used two ways in this file: (1) as a literal "always
+     * white" text color for content on permanently dark/colored
+     * surfaces (sidebar brand text, table headers, the welcome
+     * banner, card headers/stat values in dark mode), and (2) as a
+     * light card/button background meant to flip in dark mode.
+     *
+     * It used to be redefined to #142219 (== --pia-card) to cover
+     * case (2), but that silently broke every case (1) usage: e.g.
+     * ".pia-card-header { background: var(--pia-card); color:
+     * var(--pia-white); }" then resolved to identical foreground and
+     * background colors, making every card header, table heading,
+     * and stat value on the dashboard render as invisible same-color
+     * text -- which is exactly what made the dashboard look
+     * "completely blank" after login (while the sidebar, which never
+     * references this variable, rendered fine).
+     *
+     * Surfaces that should flip in dark mode already reference
+     * var(--pia-card) directly -- --pia-white stays pure white in
+     * both themes.
+     */
+}
+
+[data-theme="dark"] body { background-color: var(--pia-bg); color: var(--pia-text); }
+[data-theme="dark"] .pia-navbar { background: var(--pia-green-dark); border-bottom: 1px solid #1B2A20; }
+[data-theme="dark"] .form-control,
+[data-theme="dark"] .form-select { background-color: #0E1712; color: var(--pia-text); border-color: var(--pia-border); }
+[data-theme="dark"] .form-control:focus,
+[data-theme="dark"] .form-select:focus { background-color: #0E1712; color: var(--pia-text); }
+[data-theme="dark"] .table { color: var(--pia-text); }
+[data-theme="dark"] .pia-table tbody tr:hover { background: #182A1E; }
+[data-theme="dark"] .dropdown-menu { background-color: var(--pia-card); border-color: var(--pia-border); }
+[data-theme="dark"] .dropdown-item { color: var(--pia-text); }
+[data-theme="dark"] .dropdown-item:hover { background-color: #182A1E; color: var(--pia-text); }
+[data-theme="dark"] .list-group-item { background-color: var(--pia-card); color: var(--pia-text); border-color: var(--pia-border); }
+[data-theme="dark"] .pia-quick-action,
+[data-theme="dark"] .pia-upload-zone { background: #0E1712; }
+
+/* ===================== BASE ===================== */
+* { box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
+
+body {
+    background-color: var(--pia-bg);
+    font-family: 'Inter', -apple-system, 'Segoe UI', sans-serif;
+    color: var(--pia-text);
+    -webkit-font-smoothing: antialiased;
+    transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+h1, h2, h3, h4, h5, h6 { font-weight: 700; letter-spacing: -0.01em; }
+
+a { text-decoration: none; }
+
+::selection { background: var(--pia-gold-light); color: var(--pia-green-dark); }
+
+/* Slim, elegant scrollbar */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-thumb { background: var(--pia-border); border-radius: 8px; }
+::-webkit-scrollbar-thumb:hover { background: var(--pia-green-secondary); }
+
+/* ===================== TOP NAVBAR ===================== */
+.pia-navbar {
+    background: var(--pia-card);
+    border-bottom: 1px solid var(--pia-border);
+    padding: 0.65rem 1.25rem;
+    position: sticky;
+    top: 0;
+    z-index: 1030;
+}
+
+.pia-navbar .navbar-brand,
+.pia-navbar .navbar-brand span { color: var(--pia-green-dark); }
+
+.pia-brand-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, var(--pia-green) 0%, var(--pia-green-secondary) 100%);
+    color: var(--pia-gold-light);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.15rem;
+    box-shadow: var(--pia-shadow-sm);
+}
+
+/* Official PIA logo image */
+.pia-logo-navbar {
+    height: 64px;
+    width: auto;
+    display: block;
+    filter: drop-shadow(0 3px 8px rgba(11, 46, 19, 0.2));
+    transition: filter 0.25s ease, transform 0.25s ease;
+}
+
+.navbar-brand:hover .pia-logo-navbar {
+    filter: drop-shadow(0 5px 14px rgba(201, 162, 39, 0.4));
+    transform: translateY(-1px) scale(1.04);
+}
+
+@media (max-width: 575.98px) {
+    .pia-logo-navbar { height: 46px; }
+}
+
+.pia-logo-chip {
+    position: relative;
+    background: linear-gradient(180deg, var(--pia-card) 0%, #FBFBF8 100%);
+    border-radius: 16px;
+    padding: 0.75rem 1.1rem;
+    display: inline-flex;
+    align-items: center;
+    box-shadow: var(--pia-shadow-sm), 0 0 0 1px rgba(201, 162, 39, 0.12);
+    transition: box-shadow 0.25s ease, transform 0.25s ease;
+}
+
+.pia-logo-chip:hover {
+    box-shadow: var(--pia-shadow), 0 0 18px rgba(201, 162, 39, 0.28), 0 0 0 1px rgba(201, 162, 39, 0.25);
+    transform: translateY(-1px);
+}
+
+.pia-logo-chip img {
+    height: 60px;
+    width: auto;
+    display: block;
+    filter: drop-shadow(0 2px 5px rgba(11, 46, 19, 0.14));
+    transition: filter 0.25s ease;
+}
+
+.pia-logo-chip-lg {
+    position: relative;
+    background: linear-gradient(180deg, var(--pia-card) 0%, #FBFBF8 100%);
+    border-radius: 24px;
+    padding: 1.4rem 2.2rem;
+    display: inline-flex;
+    align-items: center;
+    box-shadow: var(--pia-shadow-lg), 0 0 0 1px rgba(201, 162, 39, 0.15);
+    overflow: hidden;
+    transition: box-shadow 0.3s ease, transform 0.3s ease;
+}
+
+.pia-logo-chip-lg:hover {
+    box-shadow: var(--pia-shadow-lg), 0 0 24px rgba(201, 162, 39, 0.3), 0 0 0 1px rgba(201, 162, 39, 0.22);
+    transform: translateY(-2px);
+}
+
+.pia-logo-chip-lg::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: 24px;
+    padding: 1px;
+    background: linear-gradient(135deg, var(--pia-gold-light) 0%, transparent 40%, transparent 60%, var(--pia-green-secondary) 100%);
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    opacity: 0.5;
+    pointer-events: none;
+}
+
+.pia-logo-chip-lg img {
+    height: 108px;
+    width: auto;
+    display: block;
+    filter: drop-shadow(0 4px 10px rgba(11, 46, 19, 0.18));
+    position: relative;
+    z-index: 1;
+}
+
+@media (max-width: 991.98px) {
+    .pia-logo-chip-lg { padding: 1rem 1.5rem; }
+    .pia-logo-chip-lg img { height: 80px; }
+}
+
+.pia-brand-icon-lg {
+    width: 72px;
+    height: 72px;
+    border-radius: 20px;
+    background: linear-gradient(135deg, var(--pia-green) 0%, var(--pia-green-secondary) 100%);
+    color: var(--pia-gold-light);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.1rem;
+    box-shadow: var(--pia-shadow);
+}
+
+.pia-toggle-btn {
+    color: var(--pia-green-dark);
+    border: none;
+    background: transparent;
+}
+.pia-toggle-btn:hover { background: var(--pia-bg); }
+
+/* Search bar in navbar */
+.pia-search {
+    position: relative;
+    width: 320px;
+    max-width: 40vw;
+}
+.pia-search i {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--pia-text-secondary);
+    font-size: 0.95rem;
+}
+.pia-search input {
+    width: 100%;
+    background: var(--pia-bg);
+    border: 1px solid var(--pia-border);
+    border-radius: 30px;
+    padding: 0.5rem 1rem 0.5rem 2.4rem;
+    font-size: 0.88rem;
+    color: var(--pia-text);
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.pia-search input:focus {
+    outline: none;
+    border-color: var(--pia-green-secondary);
+    box-shadow: 0 0 0 3px rgba(1, 65, 28, 0.08);
+    background: var(--pia-card);
+}
+
+.pia-navbar-date {
+    font-size: 0.8rem;
+    color: var(--pia-text-secondary);
+    font-weight: 500;
+}
+
+.pia-breadcrumb {
+    font-size: 0.78rem;
+    color: var(--pia-text-secondary);
+}
+.pia-breadcrumb a { color: var(--pia-text-secondary); }
+.pia-breadcrumb a:hover { color: var(--pia-green); }
+.pia-breadcrumb .active { color: var(--pia-green-dark); font-weight: 600; }
+
+.pia-role-badge {
+    background: rgba(201, 162, 39, 0.14);
+    color: var(--pia-gold);
+    border: 1px solid rgba(201, 162, 39, 0.35);
+    font-size: 0.68rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    padding: 0.2rem 0.6rem;
+    border-radius: 20px;
+}
+
+.pia-icon-btn {
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--pia-border);
+    background: var(--pia-card);
+    color: var(--pia-green-dark);
+    transition: all 0.15s ease;
+}
+.pia-icon-btn:hover { background: var(--pia-bg); border-color: var(--pia-green-secondary); color: var(--pia-green); }
+
+.pia-user-btn {
+    color: var(--pia-text);
+    border: 1px solid var(--pia-border);
+    background: var(--pia-card);
+    border-radius: 30px;
+    padding: 0.3rem 0.7rem 0.3rem 0.3rem;
+}
+
+.pia-user-btn:hover, .pia-user-btn:focus {
+    background: var(--pia-bg);
+    color: var(--pia-text);
+    border-color: var(--pia-green-secondary);
+}
+
+.pia-avatar {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.pia-avatar-lg {
+    width: 88px;
+    height: 88px;
+    border-radius: 50%;
+    object-fit: cover;
+    font-size: 2rem;
+}
+
+.pia-avatar-placeholder {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, var(--pia-green), var(--pia-green-secondary));
+    color: var(--pia-gold-light);
+    font-weight: 700;
+}
+
+/* ===================== LAYOUT / SIDEBAR ===================== */
+.app-shell {
+    display: flex;
+    min-height: calc(100vh - 65px);
+}
+
+.pia-sidebar {
+    width: var(--pia-sidebar-width);
+    background: var(--pia-sidebar);
+    border-right: 1px solid #10251A;
+    flex-shrink: 0;
+    transition: width 0.22s ease, transform 0.25s ease;
+}
+
+.pia-sidebar-inner {
+    position: sticky;
+    top: 65px;
+    height: calc(100vh - 65px);
+    overflow-y: auto;
+    padding: 1.25rem 0.9rem 2rem;
+}
+
+.pia-sidebar-brand {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    padding: 0.4rem 0.5rem 1.25rem;
+    margin-bottom: 0.5rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+.pia-sidebar-brand-icon {
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+    background: rgba(201, 162, 39, 0.16);
+    border: 1px solid rgba(201, 162, 39, 0.35);
+    color: var(--pia-gold-light);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.3rem;
+    flex-shrink: 0;
+}
+.pia-sidebar-brand-text { color: var(--pia-white); line-height: 1.15; }
+.pia-sidebar-brand-text strong { display: block; font-size: 0.95rem; letter-spacing: 0.02em; }
+.pia-sidebar-brand-text small { color: rgba(255,255,255,0.55); font-size: 0.7rem; }
+
+.pia-nav .nav-link {
+    color: rgba(255, 255, 255, 0.72);
+    padding: 0.62rem 0.85rem;
+    border-radius: 10px;
+    margin-bottom: 0.2rem;
+    font-weight: 500;
+    font-size: 0.89rem;
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    border-left: 3px solid transparent;
+    transition: background 0.15s ease, color 0.15s ease;
+}
+
+.pia-nav .nav-link i {
+    font-size: 1.02rem;
+    width: 20px;
+    text-align: center;
+    color: rgba(255, 255, 255, 0.55);
+    transition: color 0.15s ease;
+}
+
+.pia-nav .nav-link:hover {
+    background: rgba(255, 255, 255, 0.06);
+    color: var(--pia-white);
+}
+.pia-nav .nav-link:hover i { color: var(--pia-gold-light); }
+
+.pia-nav .nav-link.active {
+    background: rgba(201, 162, 39, 0.14);
+    color: var(--pia-white);
+    border-left-color: var(--pia-gold);
+    font-weight: 600;
+}
+.pia-nav .nav-link.active i { color: var(--pia-gold); }
+
+.pia-nav-heading {
+    text-transform: uppercase;
+    font-size: 0.68rem;
+    letter-spacing: 0.08em;
+    color: rgba(255, 255, 255, 0.38);
+    font-weight: 700;
+    margin: 1.1rem 0.85rem 0.4rem;
+}
+
+.pia-sidebar-backdrop {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.45);
+    z-index: 1020;
+}
+
+/* Collapsed (icon-only) sidebar state, desktop only */
+.pia-sidebar.collapsed { width: var(--pia-sidebar-width-collapsed); }
+.pia-sidebar.collapsed .pia-sidebar-brand-text,
+.pia-sidebar.collapsed .pia-nav-heading,
+.pia-sidebar.collapsed .pia-nav .nav-link span { display: none; }
+.pia-sidebar.collapsed .pia-nav .nav-link { justify-content: center; }
+.pia-sidebar.collapsed .pia-sidebar-brand { justify-content: center; }
+.pia-sidebar.collapsed .pia-logo-chip { padding: 0.45rem; }
+.pia-sidebar.collapsed .pia-logo-chip img { height: 32px; }
+
+.app-content {
+    flex-grow: 1;
+    min-width: 0;
+}
+
+@media (max-width: 991.98px) {
+    .pia-sidebar {
+        position: fixed;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        z-index: 1040;
+        transform: translateX(-100%);
+        box-shadow: var(--pia-shadow-lg);
+    }
+    .pia-sidebar.show { transform: translateX(0); }
+    .pia-sidebar-backdrop.show { display: block; }
+    .pia-search { display: none; }
+}
+
+/* ===================== PAGE ELEMENTS ===================== */
+.pia-page-title {
+    color: var(--pia-green-dark);
+    font-weight: 800;
+    letter-spacing: -0.02em;
+}
+[data-theme="dark"] .pia-page-title { color: var(--pia-white); }
+
+.pia-page-subtitle { color: var(--pia-text-secondary); font-size: 0.92rem; }
+
+.card {
+    border-color: var(--pia-border);
+    border-radius: var(--pia-radius);
+}
+
+.pia-card {
+    border: 1px solid var(--pia-border);
+    border-radius: var(--pia-radius);
+    background: var(--pia-card);
+}
+
+.pia-card-header {
+    background: var(--pia-card);
+    border-bottom: 1px solid var(--pia-border);
+    font-weight: 700;
+    color: var(--pia-green-dark);
+    border-radius: var(--pia-radius) var(--pia-radius) 0 0 !important;
+    padding: 0.95rem 1.25rem;
+}
+[data-theme="dark"] .pia-card-header { background: var(--pia-card); color: var(--pia-white); }
+
+.shadow-sm { box-shadow: var(--pia-shadow-sm) !important; }
+.shadow { box-shadow: var(--pia-shadow) !important; }
+.shadow-lg { box-shadow: var(--pia-shadow-lg) !important; }
+
+/* Tables */
+.pia-table thead {
+    background: var(--pia-green-dark);
+}
+
+.pia-table thead th {
+    color: var(--pia-white);
+    font-weight: 600;
+    font-size: 0.82rem;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    border: none;
+    white-space: nowrap;
+    padding: 0.85rem 1rem;
+    /* Sticky header: stays visible while the table body scrolls */
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    background: var(--pia-green-dark);
+    box-shadow: 0 1px 0 rgba(0, 0, 0, 0.12);
+}
+
+.pia-table tbody td { padding: 0.85rem 1rem; vertical-align: middle; }
+.pia-table tbody tr { transition: background 0.12s ease; }
+.pia-table tbody tr:hover { background: rgba(1, 65, 28, 0.035); }
+
+/* Table wrapper: rounded card look + both-axis scrolling with a fixed,
+   sticky header once content grows taller/wider than the wrapper. */
+.table-responsive.pia-table-wrap {
+    border-radius: var(--pia-radius);
+    border: 1px solid var(--pia-border);
+    overflow: auto;
+    max-height: 68vh;
+    position: relative;
+}
+
+/* Opt-out for the rare table that must never scroll vertically
+   (e.g. very short reference tables inside a modal). */
+.table-responsive.pia-table-wrap.pia-table-wrap--no-scroll {
+    max-height: none;
+    overflow-x: auto;
+    overflow-y: visible;
+}
+
+[data-theme="dark"] .pia-table thead th { background: var(--pia-green-dark); }
+
+.pia-form-section {
+    color: var(--pia-green);
+    font-weight: 700;
+    border-bottom: 2px solid var(--pia-border);
+    padding-bottom: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+/* Forms */
+.form-control, .form-select {
+    border-radius: var(--pia-radius-sm);
+    border-color: var(--pia-border);
+    padding: 0.55rem 0.85rem;
+    font-size: 0.92rem;
+}
+.form-control:focus, .form-select:focus {
+    border-color: var(--pia-green-secondary);
+    box-shadow: 0 0 0 3px rgba(1, 65, 28, 0.1);
+}
+.form-label { font-weight: 600; font-size: 0.86rem; color: var(--pia-text); }
+.input-group-text { background: var(--pia-bg); border-color: var(--pia-border); color: var(--pia-text-secondary); }
+
+/* Long option lists (native <select>): most browsers already scroll the
+   open dropdown once it exceeds the viewport, but this keeps a sane cap
+   for any select with a large option list (departments, interns, etc.)
+   and for multi-selects, which render as an inline scrollable box. */
+select.form-select {
+    max-height: 320px;
+}
+select[multiple].form-select,
+select.form-select[size] {
+    max-height: 240px;
+    overflow-y: auto;
+}
+
+/* Any Bootstrap dropdown menu (user menu, filter menus, notification
+   bell, etc.) is capped and made independently scrollable so a long
+   list of options never overflows off the screen. */
+.dropdown-menu {
+    max-height: 60vh;
+    overflow-y: auto;
+}
+
+/* Buttons */
+.btn { border-radius: var(--pia-radius-sm); font-weight: 600; font-size: 0.88rem; transition: all 0.15s ease; }
+
+.pia-btn-primary {
+    background: linear-gradient(135deg, var(--pia-green) 0%, var(--pia-green-secondary) 100%);
+    border-color: var(--pia-green);
+    color: var(--pia-white);
+    font-weight: 600;
+}
+
+.pia-btn-primary:hover, .pia-btn-primary:focus {
+    background: var(--pia-green-dark);
+    border-color: var(--pia-green-dark);
+    color: var(--pia-white);
+    transform: translateY(-1px);
+    box-shadow: var(--pia-shadow-sm);
+}
+
+.pia-btn-secondary {
+    background: var(--pia-card);
+    border: 1.5px solid var(--pia-green);
+    color: var(--pia-green);
+    font-weight: 600;
+}
+.pia-btn-secondary:hover {
+    background: rgba(1, 65, 28, 0.06);
+    color: var(--pia-green-dark);
+}
+
+.pia-btn-gold {
+    background: linear-gradient(135deg, var(--pia-gold) 0%, var(--pia-gold-light) 100%);
+    border-color: var(--pia-gold);
+    color: var(--pia-green-dark);
+    font-weight: 700;
+}
+.pia-btn-gold:hover { filter: brightness(0.95); color: var(--pia-green-dark); }
+
+.btn-primary {
+    background: linear-gradient(135deg, var(--pia-green) 0%, var(--pia-green-secondary) 100%);
+    border-color: var(--pia-green);
+}
+.btn-primary:hover, .btn-primary:focus, .btn-primary:active {
+    background: var(--pia-green-dark) !important;
+    border-color: var(--pia-green-dark) !important;
+}
+.btn-outline-primary { color: var(--pia-green); border-color: var(--pia-green); }
+.btn-outline-primary:hover { background: var(--pia-green); border-color: var(--pia-green); }
+
+/* Badges & status chips */
+.badge { font-weight: 600; font-size: 0.72rem; padding: 0.38em 0.7em; border-radius: 20px; }
+
+.pia-status-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.28rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+.pia-status-chip.success { background: rgba(46,125,50,0.12); color: var(--pia-success); }
+.pia-status-chip.warning { background: rgba(201,162,39,0.14); color: #8a6d15; }
+.pia-status-chip.danger { background: rgba(198,40,40,0.1); color: var(--pia-danger); }
+.pia-status-chip.info { background: rgba(31,95,58,0.12); color: var(--pia-green-secondary); }
+.pia-status-chip.neutral { background: var(--pia-bg); color: var(--pia-text-secondary); border: 1px solid var(--pia-border); }
+
+/* Priority badges */
+.pia-priority-high { color: var(--pia-danger); background: rgba(198,40,40,0.1); }
+.pia-priority-medium { color: #8a6d15; background: rgba(201,162,39,0.14); }
+.pia-priority-low { color: var(--pia-success); background: rgba(46,125,50,0.12); }
+
+/* Progress bars */
+.progress { border-radius: 20px; background: var(--pia-bg); height: 8px; }
+.progress-bar { background: linear-gradient(90deg, var(--pia-green), var(--pia-green-secondary)); }
+
+/* ===================== DASHBOARD ===================== */
+.pia-welcome-banner {
+    background: linear-gradient(120deg, var(--pia-green-dark) 0%, var(--pia-green) 55%, var(--pia-green-secondary) 100%);
+    color: var(--pia-white);
+    border-radius: var(--pia-radius);
+    padding: 2rem 2.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: relative;
+    overflow: hidden;
+    box-shadow: var(--pia-shadow);
+}
+.pia-welcome-banner::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 85% 20%, rgba(201,162,39,0.22), transparent 55%);
+    pointer-events: none;
+}
+.pia-welcome-banner h3 { font-weight: 800; }
+
+.pia-welcome-icon { font-size: 5rem; opacity: 0.14; color: var(--pia-gold-light); }
+
+.pia-welcome-logo {
+    height: 130px;
+    width: auto;
+    opacity: 0.16;
+    filter: brightness(0) invert(1);
+}
+
+@media (max-width: 575.98px) {
+    .pia-welcome-logo { height: 90px; }
+}
+
+.pia-stat-card {
+    border-radius: var(--pia-radius);
+    transition: transform 0.18s ease, box-shadow 0.18s ease;
+    background: var(--pia-card);
+}
+.pia-stat-card:hover { transform: translateY(-3px); box-shadow: var(--pia-shadow) !important; }
+
+.pia-stat-icon {
+    width: 54px;
+    height: 54px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.4rem;
+}
+
+.pia-stat-value {
+    font-size: 1.65rem;
+    font-weight: 800;
+    color: var(--pia-green-dark);
+    line-height: 1;
+}
+[data-theme="dark"] .pia-stat-value { color: var(--pia-white); }
+
+.pia-stat-label {
+    font-size: 0.82rem;
+    color: var(--pia-text-secondary);
+    font-weight: 500;
+    margin-top: 0.2rem;
+}
+
+/* Section labels grouping dashboard card rows, for clearer visual hierarchy */
+.pia-section-label {
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--pia-text-secondary);
+}
+.pia-section-label i { color: var(--pia-gold); }
+
+/* Recent-activity list rows */
+.list-group-item { border-color: var(--pia-border); background: var(--pia-card); color: var(--pia-text); }
+.list-group-item:hover { background: rgba(1,65,28,0.03); }
+
+/* ===================== KANBAN (Tasks) ===================== */
+.pia-kanban { display: flex; gap: 1rem; overflow-x: auto; padding-bottom: 0.5rem; }
+.pia-kanban-col {
+    flex: 0 0 300px;
+    background: var(--pia-bg);
+    border: 1px solid var(--pia-border);
+    border-radius: var(--pia-radius);
+    padding: 0.9rem;
+}
+.pia-kanban-col-title {
+    font-weight: 700;
+    font-size: 0.85rem;
+    color: var(--pia-green-dark);
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    margin-bottom: 0.75rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.pia-kanban-card {
+    background: var(--pia-card);
+    border: 1px solid var(--pia-border);
+    border-radius: var(--pia-radius-sm);
+    padding: 0.85rem;
+    margin-bottom: 0.7rem;
+    box-shadow: var(--pia-shadow-sm);
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.pia-kanban-card:hover { transform: translateY(-2px); box-shadow: var(--pia-shadow); }
+
+/* ===================== INTERN PORTAL ===================== */
+.pia-progress-bar { background-color: var(--pia-green-secondary); }
+
+.pia-quick-action {
+    border: 1px solid var(--pia-border);
+    border-radius: var(--pia-radius);
+    transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+    color: inherit;
+    background: var(--pia-card);
+}
+
+.pia-quick-action:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--pia-shadow);
+    border-color: var(--pia-green-secondary);
+    color: inherit;
+}
+
+.pia-rating {
+    display: flex;
+    flex-direction: row-reverse;
+    justify-content: flex-end;
+    gap: 0.15rem;
+}
+.pia-rating input { display: none; }
+.pia-rating label {
+    font-size: 1.8rem;
+    color: var(--pia-border);
+    cursor: pointer;
+    transition: color 0.15s ease;
+}
+.pia-rating input:checked ~ label,
+.pia-rating label:hover,
+.pia-rating label:hover ~ label { color: var(--pia-gold); }
+
+.pia-upload-zone {
+    border: 2px dashed var(--pia-border);
+    border-radius: var(--pia-radius);
+    padding: 1.5rem;
+    text-align: center;
+    background: var(--pia-bg);
+    transition: border-color 0.15s ease, background 0.15s ease;
+}
+.pia-upload-zone:hover { border-color: var(--pia-green-secondary); background: rgba(1,65,28,0.03); }
+
+/* ===================== EVALUATION MODULE ===================== */
+.pia-score-slider { accent-color: var(--pia-green); }
+
+.pia-score-display { color: var(--pia-green); min-width: 1.5rem; text-align: right; font-weight: 700; }
+
+.pia-total-score-box {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: linear-gradient(120deg, rgba(1,65,28,0.05), rgba(201,162,39,0.06));
+    border: 1px solid var(--pia-border);
+    border-radius: var(--pia-radius-sm);
+    padding: 0.9rem 1.2rem;
+    font-size: 1.05rem;
+}
+
+/* ===================== ANALYTICS DASHBOARD ===================== */
+.pia-chart-card canvas { max-height: 320px; }
+
+/* ===================== AUTH / LOGIN ===================== */
+.auth-body { background: var(--pia-green-dark); min-height: 100vh; }
+
+.auth-wrapper {
+    min-height: 100vh;
+    display: flex;
+    align-items: stretch;
+}
+
+.auth-visual {
+    flex: 1 1 52%;
+    position: relative;
+    background: linear-gradient(150deg, var(--pia-green-dark) 0%, var(--pia-green) 55%, var(--pia-green-secondary) 100%);
+    color: var(--pia-white);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 3.5rem;
+    overflow: hidden;
+}
+.auth-visual::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background:
+        radial-gradient(circle at 15% 85%, rgba(201,162,39,0.25), transparent 45%),
+        radial-gradient(circle at 90% 10%, rgba(227,197,103,0.18), transparent 40%);
+    pointer-events: none;
+}
+.auth-visual-content { position: relative; z-index: 1; }
+.auth-visual .auth-tagline { font-size: 2.1rem; font-weight: 800; line-height: 1.25; max-width: 460px; }
+.auth-visual .auth-subtext { color: rgba(255,255,255,0.72); max-width: 420px; margin-top: 0.9rem; font-size: 0.98rem; }
+
+.auth-tail-icon {
+    position: relative;
+    z-index: 1;
+    font-size: 3.4rem;
+    color: rgba(255,255,255,0.85);
+}
+
+.auth-panel {
+    flex: 1 1 48%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--pia-card);
+    padding: 2.5rem 1.5rem;
+}
+
+.auth-card {
+    background: var(--pia-card);
+    border-radius: var(--pia-radius);
+    padding: 0;
+    width: 100%;
+    max-width: 400px;
+}
+
+@media (max-width: 991.98px) {
+    .auth-visual { display: none; }
+    .auth-panel { flex: 1 1 100%; }
+}
+
+/* Flash messages */
+.flash-container { margin-bottom: 1rem; }
+.alert { border-radius: var(--pia-radius-sm); border: 1px solid var(--pia-border); }
+.alert-success { background: rgba(46,125,50,0.1); color: #1e5522; border-color: rgba(46,125,50,0.25); }
+.alert-danger { background: rgba(198,40,40,0.08); color: var(--pia-danger); border-color: rgba(198,40,40,0.22); }
+.alert-warning { background: rgba(201,162,39,0.12); color: #8a6d15; border-color: rgba(201,162,39,0.3); }
+.alert-info { background: rgba(31,95,58,0.1); color: var(--pia-green-secondary); border-color: rgba(31,95,58,0.22); }
+
+/* ===================== LOADING SKELETON ===================== */
+.pia-skeleton {
+    background: linear-gradient(90deg, var(--pia-border) 25%, #ececec 37%, var(--pia-border) 63%);
+    background-size: 400% 100%;
+    animation: pia-shimmer 1.4s ease infinite;
+    border-radius: 8px;
+}
+@keyframes pia-shimmer {
+    0% { background-position: 100% 50%; }
+    100% { background-position: 0 50%; }
+}
+
+/* ===================== MICRO-ANIMATIONS ===================== */
+/*
+ * IMPORTANT: fill-mode must NOT be 'both'/'forwards' here.
+ *
+ * .pia-fade-in is applied to <main class="app-content pia-fade-in">,
+ * which is an ancestor of every Bootstrap modal in the app (modals are
+ * declared inline inside table rows/cards throughout the templates).
+ * Bootstrap modals use `position: fixed`. Per the CSS spec, an element
+ * with a non-'none' computed `transform` becomes the containing block
+ * for any `position: fixed` descendants.
+ *
+ * With fill-mode 'both', the animation's final keyframe
+ * (`transform: translateY(0)`) stayed applied to .app-content forever
+ * after the 0.35s animation finished - silently turning .app-content
+ * into the containing block for every modal on the page. The modal's
+ * `.modal-backdrop` (appended directly to <body> by Bootstrap) still
+ * covered the full viewport correctly, but the modal dialog itself was
+ * now positioned relative to .app-content and clipped by the
+ * .table-responsive `overflow-x: auto` wrapper - so all you saw was a
+ * grey backdrop blocking every click, with the actual modal invisible.
+ *
+ * Dropping 'both' restores the default fill-mode ('none'): once the
+ * animation ends, .app-content's transform/opacity revert to their
+ * plain CSS values (transform: none), removing the accidental
+ * containing block and letting modals position against the real
+ * viewport again - while the fade-in effect on page load is unchanged.
+ */
+.pia-fade-in { animation: pia-fadeIn 0.35s ease; }
+@keyframes pia-fadeIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* ===================== TABLE TOOLBAR + SEARCH (enhanced) ===================== */
+/* Section title shown directly above a data table so its purpose is
+   immediately clear (e.g. "Intern List", "Attendance Records"). */
+.pia-table-heading h4 {
+    font-weight: 700;
+    color: var(--pia-navy, #1c2b4a);
+    letter-spacing: 0.01em;
+}
+[data-theme="dark"] .pia-table-heading h4 { color: var(--pia-white); }
+.pia-table-heading i { color: var(--pia-gold, #c9a227); }
+
+.pia-table-toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-bottom: 1.1rem;
+}
+.pia-table-toolbar .pia-page-subtitle { max-width: 640px; }
+.pia-table-toolbar-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    flex-wrap: wrap;
+}
+
+.pia-table-search {
+    position: relative;
+    min-width: 240px;
+}
+.pia-table-search i {
+    position: absolute;
+    left: 0.85rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--pia-text-secondary);
+    font-size: 0.95rem;
+    pointer-events: none;
+}
+.pia-table-search input {
+    width: 100%;
+    padding: 0.5rem 0.75rem 0.5rem 2.25rem;
+    border-radius: var(--pia-radius-sm);
+    border: 1px solid var(--pia-border);
+    background: var(--pia-card);
+    color: var(--pia-text);
+    font-size: 0.88rem;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.pia-table-search input:focus {
+    outline: none;
+    border-color: var(--pia-green-secondary);
+    box-shadow: 0 0 0 3px rgba(31, 95, 58, 0.12);
+}
+.pia-table-search .pia-search-clear {
+    position: absolute;
+    right: 0.5rem;
+    top: 50%;
+    transform: translateY(-50%);
+    border: none;
+    background: transparent;
+    color: var(--pia-text-secondary);
+    cursor: pointer;
+    padding: 0.15rem 0.35rem;
+    display: none;
+}
+.pia-table-search.has-value .pia-search-clear { display: inline-block; }
+
+/* Sticky header + rounded scroll wrap */
+.pia-table-wrap {
+    max-height: 640px;
+    overflow: auto;
+}
+.pia-table-wrap .pia-table thead th {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+}
+
+/* Empty state */
+.pia-table-empty {
+    padding: 3rem 1.5rem;
+}
+.pia-table-empty i { color: var(--pia-border); }
+[data-theme="dark"] .pia-table-empty i { color: var(--pia-border); }
+
+/* Row count chip */
+.pia-result-count {
+    font-size: 0.78rem;
+    color: var(--pia-text-secondary);
+    background: var(--pia-bg);
+    border: 1px solid var(--pia-border);
+    border-radius: 999px;
+    padding: 0.25rem 0.7rem;
+    white-space: nowrap;
+}
+
+/* Client-side pagination block spacing */
+.pia-table-pagination:empty { display: none; }
+
+/* Sortable column headers (added by table-enhance.js) */
+.pia-th-sortable {
+    cursor: pointer;
+    user-select: none;
+    transition: background 0.12s ease;
+}
+.pia-th-sortable:hover, .pia-th-sortable:focus-visible {
+    background: rgba(255, 255, 255, 0.08);
+    outline: none;
+}
+.pia-sort-icon {
+    font-size: 0.72rem;
+    opacity: 0.55;
+    margin-left: 0.15rem;
+    vertical-align: 1px;
+}
+.pia-sort-icon.active { opacity: 1; color: var(--pia-gold-light); }
+
+/* Attendance summary badges (Present / Absent / Leave / Late / Total) */
+.pia-attendance-summary {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.4rem;
+}
+.pia-attendance-summary .badge {
+    margin: 0 !important;
+    font-size: 0.78rem;
+    font-weight: 600;
+    padding: 0.4rem 0.65rem;
+    border-radius: var(--pia-radius-sm);
+}
+
+/* ===================== NOTIFICATION BELL DROPDOWN ===================== */
+.pia-icon-btn.pia-bell-btn { position: relative; }
+.pia-notif-badge {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    min-width: 17px;
+    height: 17px;
+    padding: 0 4px;
+    border-radius: 999px;
+    background: var(--pia-danger);
+    color: #fff;
+    font-size: 0.62rem;
+    font-weight: 700;
+    line-height: 17px;
+    text-align: center;
+    animation: pia-badge-pop 0.25s ease;
+}
+@keyframes pia-badge-pop {
+    from { transform: scale(0.4); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+}
+
+.pia-notif-dropdown {
+    width: 380px;
+    max-width: 92vw;
+    padding: 0;
+    border: 1px solid var(--pia-border);
+    border-radius: var(--pia-radius);
+    box-shadow: var(--pia-shadow-lg);
+    overflow: hidden;
+}
+.pia-notif-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.85rem 1rem;
+    background: var(--pia-green-dark);
+    color: var(--pia-white);
+}
+.pia-notif-header .title { font-weight: 700; font-size: 0.95rem; }
+.pia-notif-header button {
+    background: transparent;
+    border: none;
+    color: var(--pia-gold-light);
+    font-size: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+.pia-notif-header button:hover { text-decoration: underline; }
+
+.pia-notif-body {
+    max-height: 380px;
+    overflow-y: auto;
+}
+.pia-notif-item {
+    display: flex;
+    gap: 0.65rem;
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--pia-border);
+    text-decoration: none;
+    color: var(--pia-text);
+    transition: background 0.15s ease;
+    animation: pia-fadeIn 0.25s ease;
+}
+.pia-notif-item:hover { background: rgba(1, 65, 28, 0.045); color: var(--pia-text); }
+.pia-notif-item.unread { background: rgba(201, 162, 39, 0.08); }
+.pia-notif-item .pia-notif-icon {
+    flex-shrink: 0;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--pia-bg);
+    color: var(--pia-green-secondary);
+}
+.pia-notif-item.unread .pia-notif-icon { background: rgba(201, 162, 39, 0.18); color: #8a6d15; }
+.pia-notif-item .pia-notif-text { flex: 1; min-width: 0; }
+.pia-notif-item .pia-notif-msg { font-size: 0.86rem; line-height: 1.3; }
+.pia-notif-item.unread .pia-notif-msg { font-weight: 600; }
+.pia-notif-item .pia-notif-time { font-size: 0.72rem; color: var(--pia-text-secondary); margin-top: 0.2rem; }
+.pia-notif-item .pia-notif-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--pia-gold); flex-shrink: 0; margin-top: 0.35rem;
+}
+
+.pia-notif-footer {
+    padding: 0.6rem 1rem;
+    text-align: center;
+    background: var(--pia-bg);
+}
+.pia-notif-footer a { font-size: 0.82rem; font-weight: 600; }
+
+.pia-notif-empty {
+    padding: 2.5rem 1rem;
+    text-align: center;
+    color: var(--pia-text-secondary);
+}
+.pia-notif-empty i { font-size: 1.8rem; color: var(--pia-border); display: block; margin-bottom: 0.5rem; }
+
+.pia-notif-loading {
+    padding: 1.5rem;
+    text-align: center;
+    color: var(--pia-text-secondary);
+    font-size: 0.85rem;
+}

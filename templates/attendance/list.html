@@ -1,0 +1,208 @@
+{% extends 'base.html' %}
+{% block title %}Attendance Records - PIA Intern Management System{% endblock %}
+
+{% block content %}
+<div class="pia-table-toolbar">
+    <div>
+        <h3 class="pia-page-title mb-1"><i class="bi bi-calendar-check me-2"></i>
+            {{ 'Attendance Records' if current_user.role == 'HR' else 'My Attendance Entries' }}
+        </h3>
+        <p class="pia-page-subtitle mb-0">Track daily clock-in/out times, attendance status, and remarks for every intern.</p>
+    </div>
+    <div class="pia-table-toolbar-actions">
+        <div class="pia-table-search">
+            <i class="bi bi-search"></i>
+            <input type="text" class="form-control" data-table-search="attendanceTable"
+                   placeholder="Search by intern name&hellip;" aria-label="Search attendance">
+            <button type="button" class="pia-search-clear" aria-label="Clear search"><i class="bi bi-x-circle"></i></button>
+        </div>
+        {% if current_user.role == 'HR' %}
+        <a href="{{ url_for('attendance.attendance_report') }}" class="btn btn-outline-secondary text-nowrap">
+            <i class="bi bi-bar-chart-line me-1"></i> View Report
+        </a>
+        {% endif %}
+        {% if current_user.role == 'Project Manager' %}
+        <a href="{{ url_for('attendance.mark_attendance') }}" class="btn pia-btn-primary text-nowrap">
+            <i class="bi bi-calendar-plus me-1"></i> Mark Attendance
+        </a>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Filter bar -->
+<div class="card pia-card shadow-sm mb-3">
+    <div class="card-body">
+        <form method="GET" class="row g-2 align-items-end">
+            <div class="col-md-3">
+                <label class="form-label small mb-1">Intern</label>
+                <select class="form-select form-select-sm" name="intern_id">
+                    <option value="">All</option>
+                    {% for intern in interns %}
+                    <option value="{{ intern.id }}" {{ 'selected' if filters.get('intern_id')|string == intern.id|string }}>
+                        {{ intern.full_name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            {% if current_user.role == 'HR' %}
+            <div class="col-md-2">
+                <label class="form-label small mb-1">Department</label>
+                <select class="form-select form-select-sm" name="department_id">
+                    <option value="">All</option>
+                    {% for dept in departments %}
+                    <option value="{{ dept.id }}" {{ 'selected' if filters.get('department_id')|string == dept.id|string }}>
+                        {{ dept.name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            {% endif %}
+            <div class="col-md-2">
+                <label class="form-label small mb-1">Status</label>
+                <select class="form-select form-select-sm" name="status">
+                    <option value="">All</option>
+                    {% for s in statuses %}
+                    <option value="{{ s }}" {{ 'selected' if filters.get('status') == s }}>{{ s }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small mb-1">From</label>
+                <input type="date" class="form-control form-control-sm" name="date_from"
+                       value="{{ filters.get('date_from', '') }}">
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small mb-1">To</label>
+                <input type="date" class="form-control form-control-sm" name="date_to"
+                       value="{{ filters.get('date_to', '') }}">
+            </div>
+            <div class="col-md-1 d-flex gap-2">
+                <button type="submit" class="btn btn-sm pia-btn-primary flex-fill" title="Filter">
+                    <i class="bi bi-funnel"></i>
+                </button>
+            </div>
+            <div class="col-12">
+                <a href="{{ url_for('attendance.list_attendance') }}" class="small">Reset filters</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card pia-card shadow-sm">
+    <!-- Enhanced Table Heading with Stats -->
+    <div class="pia-table-heading px-3 pt-3 pb-2 d-flex justify-content-between align-items-center border-bottom">
+        <div>
+            <h4 class="mb-0">
+                <i class="bi bi-calendar-check me-2 text-primary"></i>
+                Attendance Records
+            </h4>
+            <small class="text-muted">Total: {{ records|length }} record(s)</small>
+        </div>
+        <div class="pia-attendance-summary">
+            <span class="badge bg-success me-1">
+                <i class="bi bi-check-circle me-1"></i>
+                Present: {{ records|selectattr('status', 'equalto', 'Present')|list|length }}
+            </span>
+            <span class="badge bg-danger me-1">
+                <i class="bi bi-x-circle me-1"></i>
+                Absent: {{ records|selectattr('status', 'equalto', 'Absent')|list|length }}
+            </span>
+            <span class="badge bg-secondary me-1">
+                <i class="bi bi-calendar-minus me-1"></i>
+                Leave: {{ records|selectattr('status', 'equalto', 'Leave')|list|length }}
+            </span>
+            <span class="badge bg-warning text-dark me-1">
+                <i class="bi bi-clock me-1"></i>
+                Late: {{ records|selectattr('status', 'equalto', 'Late')|list|length }}
+            </span>
+            <span class="badge bg-dark">
+                <i class="bi bi-list-check me-1"></i>
+                Total: {{ records|length }}
+            </span>
+        </div>
+    </div>
+
+    <div class="table-responsive pia-table-wrap">
+        <table class="table pia-table align-middle mb-0" id="attendanceTable" data-page-size="10">
+            <thead>
+                <tr>
+                    <th>Intern</th>
+                    <th>Department</th>
+                    <th>Date</th>
+                    <th>Clock In</th>
+                    <th>Clock Out</th>
+                    <th>Status</th>
+                    <th>Remarks</th>
+                    <th>Marked By</th>
+                    {% if current_user.role == 'Project Manager' %}
+                    <th class="text-end">Actions</th>
+                    {% endif %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for record in records %}
+                <tr data-search="{{ record.intern.full_name | lower }}">
+                    <td class="fw-semibold">{{ record.intern.full_name }}</td>
+                    <td>{{ record.intern.department.name }}</td>
+                    <td>{{ record.date.strftime('%d %b %Y') }}</td>
+                    <td>{{ record.time.strftime('%I:%M %p') if record.time else '-' }}</td>
+                    <td>
+                        {% if record.time_out %}
+                        {{ record.time_out.strftime('%I:%M %p') }}
+                        {% else %}
+                        <span class="text-muted">—</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <span class="badge
+                            {{ 'text-bg-success' if record.status == 'Present'
+                               else 'text-bg-danger' if record.status == 'Absent'
+                               else 'text-bg-warning' if record.status == 'Late'
+                               else 'text-bg-secondary' }}">
+                            {{ record.status }}
+                        </span>
+                    </td>
+                    <td class="text-muted">{{ record.remarks or '—' }}</td>
+                    <td>{{ record.marked_by.full_name }}</td>
+                    {% if current_user.role == 'Project Manager' %}
+                    <td class="text-end">
+                        {% if record.source_leave_id %}
+                        <span class="badge text-bg-info" title="Auto-marked from an approved leave request">
+                            <i class="bi bi-calendar2-week"></i> From Leave
+                        </span>
+                        {% elif record.marked_by_id == current_user.project_manager_profile.id %}
+                        <a href="{{ url_for('attendance.edit_attendance', attendance_id=record.id) }}"
+                           class="btn btn-sm btn-outline-primary" title="Edit">
+                            <i class="bi bi-pencil-square"></i>
+                        </a>
+                        {% if record.date == today and record.status in ('Present', 'Late') and not record.time_out %}
+                        <form method="POST" action="{{ url_for('attendance.clock_out', attendance_id=record.id) }}"
+                              class="d-inline">
+                            <button type="submit" class="btn btn-sm btn-outline-danger" title="Clock Out">
+                                <i class="bi bi-box-arrow-right"></i> Clock Out
+                            </button>
+                        </form>
+                        {% endif %}
+                        {% endif %}
+                    </td>
+                    {% endif %}
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="{{ 9 if current_user.role == 'Project Manager' else 8 }}" class="text-center text-muted py-4">
+                        No attendance records found.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% if records %}
+    <div class="pia-table-empty text-center d-none" data-empty-for="attendanceTable">
+        <i class="bi bi-search display-6 d-block mb-2"></i>
+        No attendance records match your search.
+    </div>
+    <div class="card-body pt-0" data-pagination-for="attendanceTable"></div>
+    {% endif %}
+</div>
+{% endblock %}

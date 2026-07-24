@@ -1,0 +1,96 @@
+{% extends 'base.html' %}
+{% block title %}Daily Work Log - PIA Intern Management System{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h3 class="pia-page-title"><i class="bi bi-journal-text me-2"></i>Daily Work Log</h3>
+</div>
+
+<div class="row g-3">
+    <div class="col-lg-5">
+        <div class="card pia-card shadow-sm">
+            <div class="card-header pia-card-header">Add Today's Entry</div>
+            <div class="card-body">
+                <form method="POST" novalidate>
+                    <div class="mb-3">
+                        <label class="form-label">Date <span class="text-danger">*</span></label>
+                        <input type="date" class="form-control" name="log_date" required
+                               max="{{ today }}" value="{{ today }}">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Description <span class="text-danger">*</span></label>
+                        <textarea class="form-control" name="description" rows="4" required
+                                  placeholder="What did you work on today?"></textarea>
+                    </div>
+                    <div class="row g-3 mb-3">
+                        <div class="col-6">
+                            <label class="form-label">Hours Worked <span class="text-danger">*</span></label>
+                            <input type="number" class="form-control" name="hours_worked"
+                                   step="0.5" min="0.5" max="24" required placeholder="e.g. 6">
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label">Progress % <span class="text-danger">*</span></label>
+                            <input type="number" class="form-control" name="progress_percent"
+                                   min="0" max="100" required placeholder="e.g. 40">
+                        </div>
+                    </div>
+                    {% if not assigned_project %}
+                    <div class="alert alert-warning small">
+                        You don't have an assigned project yet; this entry will be saved without a
+                        project link.
+                    </div>
+                    {% endif %}
+                    <button type="submit" class="btn pia-btn-primary w-100">
+                        <i class="bi bi-check-circle me-1"></i> Save Entry
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-7">
+        <div class="card pia-card shadow-sm">
+            <div class="card-header pia-card-header"><h4 class="mb-0 fs-6">My Work Log History</h4></div>
+            <div class="table-responsive pia-table-wrap">
+                <table class="table pia-table align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Description</th>
+                            <th>Hours</th>
+                            <th>Progress</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for log in logs %}
+                        <tr>
+                            <td class="text-nowrap">{{ log.log_date.strftime('%d %b %Y') }}</td>
+                            <td class="small">{{ log.description }}</td>
+                            <td>{{ log.hours_worked }}h</td>
+                            <td style="min-width: 120px;">
+                                <div class="progress" style="height: 8px;">
+                                    <div class="progress-bar pia-progress-bar" role="progressbar"
+                                         style="width: {{ log.progress_percent }}%;"></div>
+                                </div>
+                                <small class="text-muted">{{ log.progress_percent }}%</small>
+                            </td>
+                            <td class="text-end">
+                                <form method="POST" action="{{ url_for('intern_portal.delete_work_log', log_id=log.id) }}"
+                                      class="d-inline" onsubmit="return confirm('Delete this entry?');">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr><td colspan="5" class="text-center text-muted py-4">No work log entries yet.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

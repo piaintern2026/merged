@@ -1,0 +1,113 @@
+{% extends 'base.html' %}
+{% block title %}Audit Log - PIA Intern Management System{% endblock %}
+
+{% block content %}
+<div class="pia-table-toolbar">
+    <div>
+        <h3 class="pia-page-title mb-1"><i class="bi bi-journal-text me-2"></i>Audit Log</h3>
+        <p class="pia-page-subtitle mb-0">A complete, chronological trail of every create, update, and delete action across the system.</p>
+    </div>
+    <div class="pia-table-toolbar-actions">
+        <div class="pia-table-search">
+            <i class="bi bi-search"></i>
+            <input type="text" class="form-control" data-table-search="auditLogTable"
+                   placeholder="Search by username&hellip;" aria-label="Search audit log">
+            <button type="button" class="pia-search-clear" aria-label="Clear search"><i class="bi bi-x-circle"></i></button>
+        </div>
+    </div>
+</div>
+
+<!-- Filter bar -->
+<div class="card pia-card shadow-sm mb-3">
+    <div class="card-body">
+        <form method="GET" class="row g-2 align-items-end">
+            <div class="col-md-3">
+                <label class="form-label small mb-1">Action</label>
+                <select class="form-select form-select-sm" name="action">
+                    <option value="">All</option>
+                    {% for a in actions %}
+                    <option value="{{ a }}" {{ 'selected' if filters.get('action') == a }}>{{ a }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label small mb-1">Target Type</label>
+                <select class="form-select form-select-sm" name="target_type">
+                    <option value="">All</option>
+                    {% for t in target_types %}
+                    <option value="{{ t }}" {{ 'selected' if filters.get('target_type') == t }}>{{ t }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label small mb-1">User</label>
+                <select class="form-select form-select-sm" name="user_id">
+                    <option value="">All</option>
+                    {% for u in users %}
+                    <option value="{{ u.id }}" {{ 'selected' if filters.get('user_id')|string == u.id|string }}>
+                        {{ u.username }} ({{ u.role|display_role }})
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-sm pia-btn-primary w-100">
+                    <i class="bi bi-funnel me-1"></i> Filter
+                </button>
+            </div>
+            <div class="col-12">
+                <a href="{{ url_for('admin.audit_log') }}" class="small">Reset filters</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card pia-card shadow-sm">
+    <div class="pia-table-heading px-3 pt-3">
+        <h4 class="mb-0"><i class="bi bi-journal-text me-2"></i>Audit Log</h4>
+    </div>
+    <div class="table-responsive pia-table-wrap">
+        <table class="table pia-table align-middle mb-0" id="auditLogTable" data-page-size="10000">
+            <thead>
+                <tr>
+                    <th>Date &amp; Time</th>
+                    <th>User</th>
+                    <th>Action</th>
+                    <th>Description</th>
+                    <th>Target</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for entry in entries %}
+                <tr data-search="{{ (entry.user.username if entry.user else 'system') | lower }}">
+                    <td class="text-nowrap small">{{ entry.created_at.strftime('%d %b %Y, %I:%M %p') }}</td>
+                    <td>{{ entry.user.username if entry.user else 'System' }}</td>
+                    <td>
+                        <span class="badge
+                            {{ 'text-bg-success' if entry.action == 'CREATE'
+                               else 'text-bg-primary' if entry.action == 'UPDATE'
+                               else 'text-bg-danger' if entry.action == 'DELETE'
+                               else 'text-bg-secondary' }}">
+                            {{ entry.action }}
+                        </span>
+                    </td>
+                    <td class="small">{{ entry.description }}</td>
+                    <td class="text-muted small">{{ entry.target_type or '—' }}</td>
+                </tr>
+                {% else %}
+                <tr><td colspan="5" class="text-center text-muted py-4">No audit log entries found.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% if entries %}
+    <div class="pia-table-empty text-center d-none" data-empty-for="auditLogTable">
+        <i class="bi bi-search display-6 d-block mb-2"></i>
+        No entries on this page match your search.
+    </div>
+    {% endif %}
+</div>
+
+{% set pagination_endpoint = 'admin.audit_log' %}
+{% include 'components/pagination.html' %}
+{% endblock %}

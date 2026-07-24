@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}PIA Intern Management System{% endblock %}</title>
+
+    <!-- Preconnect / fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css">
+    <!-- Custom PIA theme stylesheet (Inter font imported inside) -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+
+    <!-- Set theme before paint to avoid flash of wrong theme -->
+    <script>
+        (function () {
+            var saved = localStorage.getItem('pia-theme');
+            if (saved === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
+        })();
+    </script>
+
+    {% block extra_head %}{% endblock %}
+</head>
+<body class="{{ 'auth-body' if not current_user.is_authenticated else '' }}">
+
+{% if current_user.is_authenticated %}
+    {% include 'components/navbar.html' %}
+
+    <div class="app-shell">
+        {% include 'components/sidebar.html' %}
+
+        <main class="app-content pia-fade-in">
+            <div class="container-fluid py-4">
+                {% include 'components/flash.html' %}
+                {% block content %}{% endblock %}
+            </div>
+        </main>
+    </div>
+{% else %}
+    {% include 'components/flash.html' %}
+    {% block auth_content %}{% endblock %}
+{% endif %}
+
+<!-- Bootstrap 5 JS Bundle (includes Popper) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/js/bootstrap.bundle.min.js"></script>
+<!-- Custom application JS -->
+<script src="{{ url_for('static', filename='js/script.js') }}"></script>
+<script src="{{ url_for('static', filename='js/table-enhance.js') }}"></script>
+{% if current_user.is_authenticated %}
+<script src="{{ url_for('static', filename='js/notifications.js') }}"></script>
+{% endif %}
+
+{% block extra_scripts %}{% endblock %}
+</body>
+</html>

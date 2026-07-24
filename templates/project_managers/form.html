@@ -1,0 +1,94 @@
+{% extends 'base.html' %}
+{% block title %}{{ 'Edit' if pm else 'Add' }} Project Manager - PIA Intern Management System{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h3 class="pia-page-title">
+        <i class="bi bi-person-badge me-2"></i>{{ 'Edit' if pm else 'Add' }} Project Manager
+    </h3>
+    <a href="{{ url_for('project_manager.list_pms') }}" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left me-1"></i> Back to List
+    </a>
+</div>
+
+{% set data = form if form else pm %}
+<div class="card pia-card shadow-sm">
+    <div class="card-body p-4">
+        <form method="POST" enctype="multipart/form-data" novalidate>
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label">Full Name <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" name="full_name" required
+                           value="{{ data.full_name if data else '' }}">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">P Number <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" name="p_number" required
+                           value="{{ data.p_number if data else '' }}">
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label">Department <span class="text-danger">*</span></label>
+                    <select class="form-select" name="department_id" required>
+                        <option value="" disabled {{ 'selected' if not pm }}>Select department</option>
+                        {% for dept in departments %}
+                        <option value="{{ dept.id }}"
+                            {{ 'selected' if pm and pm.department_id == dept.id }}>{{ dept.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">City <span class="text-danger">*</span></label>
+                    <select class="form-select" name="city" required>
+                        <option value="" {{ 'selected' if not (data and data.city) else '' }} disabled>Select a city&hellip;</option>
+                        {% for c in cities %}
+                        <option value="{{ c }}" {{ 'selected' if data and data.city == c else '' }}>{{ c }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label">Phone <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" name="phone" required
+                           value="{{ data.phone if data else '' }}">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Designation <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" name="designation" required
+                           value="{{ data.designation if data else '' }}">
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label">Email <span class="text-danger">*</span></label>
+                    <input type="email" class="form-control" name="email" required
+                           value="{{ (data.email if form else pm.user.email) if data else '' }}">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Username <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" name="username" required
+                           value="{{ (data.username if form else pm.user.username) if data else '' }}">
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label">
+                        Password {{ '' if pm else '' }}<span class="text-danger">{{ '' if pm else '*' }}</span>
+                    </label>
+                    <input type="password" class="form-control" name="password" {{ 'required' if not pm else '' }}
+                           placeholder="{{ 'Leave blank to keep current password' if pm else 'Minimum 8 characters' }}">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Profile Picture</label>
+                    <input type="file" class="form-control" name="profile_picture" accept=".png,.jpg,.jpeg,.gif">
+                    {% if pm and pm.user.profile_picture %}
+                        <div class="form-text">Current photo will be kept unless you upload a new one.</div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <button type="submit" class="btn pia-btn-primary mt-4">
+                <i class="bi bi-check-circle me-1"></i> {{ 'Update' if pm else 'Save' }} Project Manager
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %}

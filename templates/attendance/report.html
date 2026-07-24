@@ -1,0 +1,101 @@
+{% extends 'base.html' %}
+{% block title %}Attendance Report - PIA Intern Management System{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+    <h3 class="pia-page-title"><i class="bi bi-bar-chart-line me-2"></i>Attendance Report</h3>
+    <a href="{{ url_for('attendance.list_attendance') }}" class="btn btn-outline-secondary">
+        <i class="bi bi-list-ul me-1"></i> View Raw Records
+    </a>
+</div>
+
+<!-- Filter bar -->
+<div class="card pia-card shadow-sm mb-3">
+    <div class="card-body">
+        <form method="GET" class="row g-2 align-items-end">
+            <div class="col-md-3">
+                <label class="form-label small mb-1">Intern</label>
+                <select class="form-select form-select-sm" name="intern_id">
+                    <option value="">All</option>
+                    {% for intern in interns %}
+                    <option value="{{ intern.id }}" {{ 'selected' if filters.get('intern_id')|string == intern.id|string }}>
+                        {{ intern.full_name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label small mb-1">Department</label>
+                <select class="form-select form-select-sm" name="department_id">
+                    <option value="">All</option>
+                    {% for dept in departments %}
+                    <option value="{{ dept.id }}" {{ 'selected' if filters.get('department_id')|string == dept.id|string }}>
+                        {{ dept.name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small mb-1">From</label>
+                <input type="date" class="form-control form-control-sm" name="date_from"
+                       value="{{ filters.get('date_from', '') }}">
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small mb-1">To</label>
+                <input type="date" class="form-control form-control-sm" name="date_to"
+                       value="{{ filters.get('date_to', '') }}">
+            </div>
+            <div class="col-md-2 d-flex gap-2">
+                <button type="submit" class="btn btn-sm pia-btn-primary flex-fill">
+                    <i class="bi bi-funnel me-1"></i> Filter
+                </button>
+                <a href="{{ url_for('attendance.attendance_report') }}" class="btn btn-sm btn-outline-secondary flex-fill">Reset</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card pia-card shadow-sm">
+    <div class="pia-table-heading px-3 pt-3">
+        <h4 class="mb-0"><i class="bi bi-bar-chart-line me-2"></i>Attendance Report</h4>
+    </div>
+    <div class="table-responsive pia-table-wrap">
+        <table class="table pia-table align-middle mb-0">
+            <thead>
+                <tr>
+                    <th>Intern</th>
+                    <th>Department</th>
+                    <th>Present</th>
+                    <th>Absent</th>
+                    <th>Leave</th>
+                    <th>Late</th>
+                    <th>Total Records</th>
+                    <th>Attendance Rate</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in report_rows %}
+                <tr>
+                    <td class="fw-semibold">{{ row.intern.full_name }}</td>
+                    <td>{{ row.intern.department.name }}</td>
+                    <td><span class="badge text-bg-success">{{ row.summary.get('Present', 0) }}</span></td>
+                    <td><span class="badge text-bg-danger">{{ row.summary.get('Absent', 0) }}</span></td>
+                    <td><span class="badge text-bg-secondary">{{ row.summary.get('Leave', 0) }}</span></td>
+                    <td><span class="badge text-bg-warning">{{ row.summary.get('Late', 0) }}</span></td>
+                    <td>{{ row.total }}</td>
+                    <td>
+                        {% if row.total > 0 %}
+                            {{ ((row.summary.get('Present', 0) / row.total) * 100)|round(1) }}%
+                        {% else %}
+                            —
+                        {% endif %}
+                    </td>
+                </tr>
+                {% else %}
+                <tr><td colspan="8" class="text-center text-muted py-4">No attendance data available for the selected filters.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
