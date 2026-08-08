@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+{% block title %}My Calendar - Intern Onboarding Portal{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+    <h3 class="pia-page-title"><i class="bi bi-calendar-event me-2"></i>My Calendar</h3>
+    <span class="text-muted small">Project deadlines, submissions, evaluations, leave &amp; reminders</span>
+</div>
+
+<div class="d-flex flex-wrap gap-2 mb-3">
+    <span class="badge text-bg-primary">Project Deadline</span>
+    <span class="badge text-bg-info">Submission</span>
+    <span class="badge text-bg-secondary">Evaluation</span>
+    <span class="badge text-bg-warning text-dark">Leave</span>
+    <span class="badge text-bg-success">Attendance Reminder / Milestone Done</span>
+    <span class="badge text-bg-danger">Overdue Milestone</span>
+    <span class="badge text-bg-secondary">Rotation</span>
+</div>
+
+{% set grouped = {} %}
+{% for e in events %}
+    {% if e.date not in grouped %}{% set _ = grouped.update({e.date: []}) %}{% endif %}
+    {% set _ = grouped[e.date].append(e) %}
+{% endfor %}
+
+<div class="card pia-card shadow-sm">
+    <div class="pia-table-heading px-3 pt-3">
+        <h4 class="mb-0">Upcoming &amp; Recent Events</h4>
+    </div>
+    <div class="list-group list-group-flush">
+        {% for d in grouped.keys() | sort %}
+        <div class="list-group-item {{ 'bg-light' if d == today.isoformat() }}">
+            <div class="fw-bold mb-2">
+                {{ d }}
+                {% if d == today.isoformat() %}<span class="badge text-bg-dark ms-2">Today</span>{% endif %}
+            </div>
+            {% for e in grouped[d] %}
+            <a href="{{ e.url }}" class="d-flex justify-content-between align-items-center text-decoration-none text-body py-1">
+                <div>
+                    <span class="badge text-bg-{{ e.color }} me-2">{{ e.type }}</span>
+                    {{ e.title }}
+                    <div class="text-muted small">{{ e.detail }}</div>
+                </div>
+                <i class="bi bi-chevron-right text-muted"></i>
+            </a>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="list-group-item text-muted text-center py-5">No calendar events yet.</div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,170 @@
+{% extends 'base.html' %}
+{% block title %}Calendar - Intern Onboarding Portal{% endblock %}
+
+{% block content %}
+<div class="pia-table-toolbar">
+    <div>
+        <h3 class="pia-page-title mb-1"><i class="bi bi-calendar3 me-2"></i>Calendar</h3>
+        <p class="pia-page-subtitle mb-0">Rotations, leave, project deadlines, evaluations and internship completions in one view.</p>
+    </div>
+    <div class="pia-table-toolbar-actions">
+        <span class="badge text-bg-primary-subtle text-primary border">
+            <i class="bi bi-arrow-left-right me-1"></i> Rotation
+        </span>
+        <span class="badge text-bg-warning-subtle text-warning border">
+            <i class="bi bi-calendar2-week me-1"></i> Leave
+        </span>
+        <span class="badge text-bg-danger-subtle text-danger border">
+            <i class="bi bi-alarm me-1"></i> Deadline
+        </span>
+        <span class="badge text-bg-info-subtle text-info border">
+            <i class="bi bi-clipboard-check me-1"></i> Evaluation
+        </span>
+        <span class="badge text-bg-success-subtle text-success border">
+            <i class="bi bi-flag me-1"></i> Completion
+        </span>
+    </div>
+</div>
+
+<div class="row g-3">
+    <div class="col-lg-8">
+        <div class="card pia-card shadow-sm">
+            <div class="card-header pia-card-header d-flex justify-content-between align-items-center">
+                <button type="button" class="btn btn-sm btn-outline-secondary" id="calPrev"><i class="bi bi-chevron-left"></i></button>
+                <span id="calMonthLabel" class="fw-semibold"></span>
+                <button type="button" class="btn btn-sm btn-outline-secondary" id="calNext"><i class="bi bi-chevron-right"></i></button>
+            </div>
+            <div class="card-body">
+                <div id="calGrid" class="pia-calendar-grid"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="card pia-card shadow-sm h-100">
+            <div class="card-header pia-card-header"><i class="bi bi-list-check me-2"></i>Upcoming (next 45 days)</div>
+            <div class="card-body p-0" style="max-height: 520px; overflow-y: auto;">
+                <ul class="list-group list-group-flush">
+                    {% for e in upcoming %}
+                    <li class="list-group-item">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <span class="badge {{ {
+                                    'Rotation': 'text-bg-primary-subtle text-primary',
+                                    'Leave': 'text-bg-warning-subtle text-warning',
+                                    'Deadline': 'text-bg-danger-subtle text-danger',
+                                    'Evaluation': 'text-bg-info-subtle text-info',
+                                    'Completion': 'text-bg-success-subtle text-success',
+                                }[e.type] }} border mb-1">{{ e.type }}</span>
+                                <div><a href="{{ e.url }}">{{ e.title }}</a></div>
+                            </div>
+                            <small class="text-muted text-nowrap ms-2">{{ e.date.strftime('%d %b') }}</small>
+                        </div>
+                    </li>
+                    {% else %}
+                    <li class="list-group-item text-center text-muted py-4">No upcoming events in this window.</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.pia-calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+.pia-calendar-grid .cal-dow { font-weight: 600; font-size: .8rem; text-align: center; color: #6c757d; padding: 4px 0; }
+.pia-calendar-grid .cal-cell { min-height: 84px; border: 1px solid #dfe4ea; border-radius: 6px; padding: 4px; font-size: .78rem; background: #fff; }
+.pia-calendar-grid .cal-cell.cal-empty { background: transparent; border: none; }
+.pia-calendar-grid .cal-cell.cal-today { border-color: #c9a24b; border-width: 2px; }
+.pia-calendar-grid .cal-date { font-weight: 600; margin-bottom: 2px; }
+.pia-calendar-grid .cal-evt { display: block; border-radius: 3px; padding: 1px 4px; margin-bottom: 2px; color: #fff; text-decoration: none; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pia-calendar-grid .cal-evt.evt-Rotation { background: #01477a; }
+.pia-calendar-grid .cal-evt.evt-Leave { background: #c9a24b; }
+.pia-calendar-grid .cal-evt.evt-Deadline { background: #b3261e; }
+.pia-calendar-grid .cal-evt.evt-Evaluation { background: #1a6fb0; }
+.pia-calendar-grid .cal-evt.evt-Completion { background: #2e7d32; }
+</style>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+(function () {
+    const events = {{ events_json | tojson }};
+    const todayStr = "{{ today.isoformat() }}";
+    const eventsByDate = {};
+    events.forEach(function (e) {
+        (eventsByDate[e.date] = eventsByDate[e.date] || []).push(e);
+    });
+
+    let cursor = new Date(todayStr + "T00:00:00");
+    cursor.setDate(1);
+
+    const grid = document.getElementById('calGrid');
+    const label = document.getElementById('calMonthLabel');
+    const DOW = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+    function render() {
+        grid.innerHTML = '';
+        label.textContent = cursor.toLocaleString('en-US', { month: 'long', year: 'numeric' });
+
+        DOW.forEach(function (d) {
+            const el = document.createElement('div');
+            el.className = 'cal-dow';
+            el.textContent = d;
+            grid.appendChild(el);
+        });
+
+        const firstDay = new Date(cursor.getFullYear(), cursor.getMonth(), 1);
+        const startOffset = firstDay.getDay();
+        const daysInMonth = new Date(cursor.getFullYear(), cursor.getMonth() + 1, 0).getDate();
+
+        for (let i = 0; i < startOffset; i++) {
+            const el = document.createElement('div');
+            el.className = 'cal-cell cal-empty';
+            grid.appendChild(el);
+        }
+
+        for (let d = 1; d <= daysInMonth; d++) {
+            const dateObj = new Date(cursor.getFullYear(), cursor.getMonth(), d);
+            const iso = dateObj.toISOString().slice(0, 10);
+            const cell = document.createElement('div');
+            cell.className = 'cal-cell' + (iso === todayStr ? ' cal-today' : '');
+
+            const dateLabel = document.createElement('div');
+            dateLabel.className = 'cal-date';
+            dateLabel.textContent = d;
+            cell.appendChild(dateLabel);
+
+            (eventsByDate[iso] || []).slice(0, 3).forEach(function (e) {
+                const a = document.createElement('a');
+                a.className = 'cal-evt evt-' + e.type;
+                a.href = e.url;
+                a.title = e.title;
+                a.textContent = e.title;
+                cell.appendChild(a);
+            });
+            if ((eventsByDate[iso] || []).length > 3) {
+                const more = document.createElement('div');
+                more.className = 'text-muted';
+                more.style.fontSize = '.7rem';
+                more.textContent = '+' + (eventsByDate[iso].length - 3) + ' more';
+                cell.appendChild(more);
+            }
+
+            grid.appendChild(cell);
+        }
+    }
+
+    document.getElementById('calPrev').addEventListener('click', function () {
+        cursor.setMonth(cursor.getMonth() - 1);
+        render();
+    });
+    document.getElementById('calNext').addEventListener('click', function () {
+        cursor.setMonth(cursor.getMonth() + 1);
+        render();
+    });
+
+    render();
+})();
+</script>
+{% endblock %}

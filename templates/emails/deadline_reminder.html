@@ -1,0 +1,46 @@
+{% extends "emails/base_email.html" %}
+{% block title %}Deadline {{ "Overdue" if is_overdue else "Reminder" }} - {{ project_title }}{% endblock %}
+{% block preheader %}{{ project_title }} is {{ "overdue" if is_overdue else "due soon" }}.{% endblock %}
+
+{% block body %}
+<h2 style="margin:0 0 16px 0; font-family:'Segoe UI',Arial,sans-serif; color:{{ '#C62828' if is_overdue else '#C9A227' }}; font-size:20px;">
+    {{ "⚠ Project Overdue" if is_overdue else "⏰ Deadline Reminder" }}
+</h2>
+
+<p style="margin:0 0 16px 0; font-family:'Segoe UI',Arial,sans-serif; font-size:14px; color:#1E1E1E; line-height:1.6;">
+    Hi {{ recipient_name }},<br><br>
+    {% if is_overdue %}
+        The project below has passed its deadline and is still not marked complete. Please update its status as soon as possible.
+    {% else %}
+        This is a friendly reminder that the project below is due in {{ days_remaining }} day(s).
+    {% endif %}
+</p>
+
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0"
+       style="background-color:#F8F9F7; border:1px solid #D8DCCF; border-radius:10px; margin:20px 0;">
+    <tr>
+        <td style="padding:18px 20px;">
+            <p style="margin:0 0 8px 0; font-family:'Segoe UI',Arial,sans-serif; font-size:16px; color:#01411C; font-weight:700;">
+                {{ project_title }}
+            </p>
+            <p style="margin:0 0 4px 0; font-family:'Segoe UI',Arial,sans-serif; font-size:13px; color:#5E6A61;">
+                <strong>Status:</strong> {{ status }}
+            </p>
+            <p style="margin:0; font-family:'Segoe UI',Arial,sans-serif; font-size:13px; color:{{ '#C62828' if is_overdue else '#1E1E1E' }};">
+                <strong>Deadline:</strong> {{ deadline }}
+            </p>
+        </td>
+    </tr>
+</table>
+
+<table role="presentation" cellpadding="0" cellspacing="0">
+    <tr>
+        <td style="border-radius:8px; background-color:#01411C;">
+            <a href="{{ project_url }}" target="_blank"
+               style="display:inline-block; padding:12px 28px; font-family:'Segoe UI',Arial,sans-serif; font-size:14px; font-weight:600; color:#FFFFFF; text-decoration:none; border-radius:8px;">
+                View Project
+            </a>
+        </td>
+    </tr>
+</table>
+{% endblock %}

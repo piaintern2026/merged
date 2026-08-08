@@ -1,0 +1,290 @@
+<!--
+    components/sidebar.html
+    ------------------------
+    Left-hand navigation. Links are shown based on the current user's
+    role, implementing role-based access at the UI level too.
+-->
+<aside class="pia-sidebar" id="pia-sidebar">
+    <div class="pia-sidebar-inner">
+        <div class="pia-sidebar-brand">
+            <div class="pia-logo-chip">
+                <img src="{{ url_for('static', filename='images/pia-logo-crop.png') }}" alt="Intern Onboarding Portal">
+            </div>
+        </div>
+        <ul class="nav flex-column pia-nav">
+            <li class="nav-item">
+                <a class="nav-link {{ 'active' if request.endpoint == 'dashboard.index' }}"
+                   href="{{ url_for('dashboard.index') }}">
+                    <i class="bi bi-speedometer2"></i> <span>Dashboard</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {{ 'active' if request.blueprint == 'lms' }}"
+                   href="{{ url_for('lms.index') }}">
+                    <i class="bi bi-mortarboard"></i> <span>LMS (Learning Management System)</span>
+                </a>
+            </li>
+
+            {% if current_user.role == 'Super Admin' %}
+            <li class="pia-nav-heading">Organization</li>
+            <!-- Departments, Interns, and Project Managers are now accessed via
+                 their clickable dashboard cards (see dashboard.html) to avoid
+                 duplicate navigation. Routes/permissions are unchanged. -->
+            <li class="nav-item">
+                <a class="nav-link {{ 'active' if request.endpoint == 'admin.list_users' and request.args.get('role') == 'Station HR' }}"
+                   href="{{ url_for('admin.list_users', role='Station HR') }}">
+                    <i class="bi bi-person-workspace"></i> <span>Station HR Management</span>
+                </a>
+            </li>
+
+            <li class="pia-nav-heading">Access Control</li>
+            <li class="nav-item">
+                <a class="nav-link {{ 'active' if request.endpoint in ['admin.list_users', 'admin.add_user', 'admin.edit_user'] and not request.args.get('role') }}"
+                   href="{{ url_for('admin.list_users') }}">
+                    <i class="bi bi-people"></i> <span>Users</span>
+                </a>
+            </li>
+
+            <li class="pia-nav-heading">Projects &amp; Attendance</li>
+            <!-- Projects and Attendance are now accessed via their clickable
+                 dashboard cards. -->
+
+            <!-- Rotations is now accessed via its clickable dashboard card. -->
+
+            <li class="pia-nav-heading">Insights</li>
+            <li class="nav-item">
+                <a class="nav-link {{ 'active' if request.endpoint == 'admin.internship_progress' }}"
+                   href="{{ url_for('admin.internship_progress') }}">
+                    <i class="bi bi-graph-up-arrow"></i> <span>Internship Progress</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {{ 'active' if request.endpoint == 'admin.workforce_insights' }}"
+                   href="{{ url_for('admin.workforce_insights') }}">
+                    <i class="bi bi-bar-chart-steps"></i> <span>Workforce Insights</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {{ 'active' if request.endpoint == 'rotation.calendar' }}"
+                   href="{{ url_for('rotation.calendar') }}">
+                    <i class="bi bi-calendar3"></i> <span>Calendar</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {{ 'active' if request.blueprint == 'reports' }}"
+                   href="{{ url_for('reports.index') }}">
+                    <i class="bi bi-file-earmark-arrow-down"></i> <span>Reports</span>
+                </a>
+            </li>
+
+            <li class="pia-nav-heading">Administration</li>
+            <li class="nav-item">
+                <a class="nav-link {{ 'active' if request.endpoint == 'admin.settings' }}"
+                   href="{{ url_for('admin.settings') }}">
+                    <i class="bi bi-gear"></i> <span>Settings</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {{ 'active' if request.endpoint == 'admin.audit_log' }}"
+                   href="{{ url_for('admin.audit_log') }}">
+                    <i class="bi bi-journal-text"></i> <span>Audit Logs</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {{ 'active' if request.endpoint == 'admin.email_settings' }}"
+                   href="{{ url_for('admin.email_settings') }}">
+                    <i class="bi bi-envelope-gear"></i> <span>Email Settings</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {{ 'active' if request.endpoint == 'admin.announcements' }}"
+                   href="{{ url_for('admin.announcements') }}">
+                    <i class="bi bi-megaphone"></i> <span>Announcements</span>
+                </a>
+            </li>
+            {% endif %}
+
+            {% if current_user.role == 'Station HR' %}
+            <li class="pia-nav-heading">Internship Management</li>
+            <li class="nav-item">
+                <a class="nav-link {{ 'active' if request.endpoint == 'admin.announcements' }}"
+                   href="{{ url_for('admin.announcements') }}">
+                    <i class="bi bi-megaphone"></i> <span>Announcements</span>
+                </a>
+            </li>
+            <!-- Interns is now accessed via its clickable dashboard card. -->
+            <li class="nav-item">
+                <a class="nav-link {{ 'active' if request.endpoint == 'rotation.rotate_intern' }}"
+                   href="{{ url_for('intern.list_interns') }}">
+                    <i class="bi bi-person-check"></i> <span>Assign Interns</span>
+                </a>
+            </li>
+            <!-- Rotations is now accessed via its clickable dashboard card. -->
+
+            <li class="pia-nav-heading">Projects &amp; Attendance</li>
+            <!-- Projects and Attendance are now accessed via their clickable
+                 dashboard cards. -->
+
+            <li class="pia-nav-heading">Insights</li>
+            <li class="nav-item">
+                <a class="nav-link {{ 'active' if request.endpoint == 'admin.internship_progress' }}"
+                   href="{{ url_for('admin.internship_progress') }}">
+                    <i class="bi bi-graph-up-arrow"></i> <span>Internship Progress</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {{ 'active' if request.endpoint == 'admin.workforce_insights' }}"
+                   href="{{ url_for('admin.workforce_insights') }}">
+                    <i class="bi bi-bar-chart-steps"></i> <span>Workforce Insights</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {{ 'active' if request.endpoint == 'rotation.calendar' }}"
+                   href="{{ url_for('rotation.calendar') }}">
+                    <i class="bi bi-calendar3"></i> <span>Calendar</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {{ 'active' if request.blueprint == 'reports' }}"
+                   href="{{ url_for('reports.index') }}">
+                    <i class="bi bi-file-earmark-arrow-down"></i> <span>Reports</span>
+                </a>
+            </li>
+            {% endif %}
+
+            {% if current_user.role == 'Project Manager' %}
+            <li class="pia-nav-heading">My Work</li>
+            <!-- My Projects, Attendance Records, Evaluate Interns, and Leave
+                 Requests are now accessed via their clickable dashboard
+                 cards. Attendance is intern self-service (Clock In only);
+                 PMs have view-only access via Attendance Records. PM
+                 Evaluation Forms have no dashboard card, so it stays here. -->
+            <li class="nav-item">
+                <a class="nav-link {{ 'active' if request.blueprint == 'pm_evaluation' }}"
+                   href="{{ url_for('pm_evaluation.list_evaluations') }}">
+                    <i class="bi bi-clipboard-data"></i> <span>PM Evaluation Forms</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {{ 'active' if request.blueprint == 'message' }}"
+                   href="{{ url_for('message.inbox') }}">
+                    <i class="bi bi-chat-dots"></i> <span>Messages</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {{ 'active' if request.endpoint == 'pm_workspace.rotation_history' }}"
+                   href="{{ url_for('pm_workspace.rotation_history') }}">
+                    <i class="bi bi-clock-history"></i> <span>Rotation History</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {{ 'active' if request.endpoint == 'pm_extra.analytics' }}"
+                   href="{{ url_for('pm_extra.analytics') }}">
+                    <i class="bi bi-bar-chart-line"></i> <span>My Analytics</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {{ 'active' if request.endpoint == 'pm_extra.calendar' }}"
+                   href="{{ url_for('pm_extra.calendar') }}">
+                    <i class="bi bi-calendar-event"></i> <span>My Calendar</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {{ 'active' if request.endpoint == 'pm_extra.reports_index' }}"
+                   href="{{ url_for('pm_extra.reports_index') }}">
+                    <i class="bi bi-file-earmark-arrow-down"></i> <span>My Reports</span>
+                </a>
+            </li>
+            {% endif %}
+
+            {% if current_user.role == 'Intern' %}
+            <li class="pia-nav-heading">Intern Portal</li>
+            <li class="nav-item">
+                <a class="nav-link {{ 'active' if request.endpoint == 'intern_portal.dashboard' }}"
+                   href="{{ url_for('intern_portal.dashboard') }}">
+                    <i class="bi bi-speedometer2"></i> <span>My Dashboard</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {{ 'active' if request.endpoint == 'intern_portal.submissions' }}"
+                   href="{{ url_for('intern_portal.submissions') }}">
+                    <i class="bi bi-cloud-upload"></i> <span>Project Submission</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {{ 'active' if request.blueprint == 'message' }}"
+                   href="{{ url_for('message.inbox') }}">
+                    <i class="bi bi-chat-dots"></i> <span>Messages</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {{ 'active' if request.endpoint == 'intern_portal.final_report' }}"
+                   href="{{ url_for('intern_portal.final_report') }}">
+                    <i class="bi bi-file-earmark-check"></i> <span>Final Report</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {{ 'active' if request.endpoint == 'intern_portal.my_evaluations' }}"
+                   href="{{ url_for('intern_portal.my_evaluations') }}">
+                    <i class="bi bi-clipboard-check"></i> <span>My Evaluations</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {{ 'active' if request.endpoint == 'intern_portal.profile' }}"
+                   href="{{ url_for('intern_portal.profile') }}">
+                    <i class="bi bi-person-circle"></i> <span>My Profile</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {{ 'active' if request.endpoint == 'intern_portal.feedback' }}"
+                   href="{{ url_for('intern_portal.feedback') }}">
+                    <i class="bi bi-chat-square-heart"></i> <span>Feedback</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {{ 'active' if request.blueprint == 'leave' }}"
+                   href="{{ url_for('leave.my_leaves') }}">
+                    <i class="bi bi-calendar2-week"></i> <span>Leave Requests</span>
+                </a>
+            </li>
+            {% endif %}
+
+            <li class="pia-nav-heading">Account</li>
+            <li class="nav-item">
+                <a class="nav-link {{ 'active' if request.blueprint == 'notification' }}"
+                   href="{{ url_for('notification.list_notifications') }}">
+                    <i class="bi bi-bell"></i> <span>Notifications</span>
+                </a>
+            </li>
+            {% if current_user.role == 'Station HR' %}
+            <li class="nav-item">
+                <a class="nav-link {{ 'active' if request.endpoint == 'admin.profile' }}"
+                   href="{{ url_for('admin.profile') }}">
+                    <i class="bi bi-person-circle"></i> <span>My Profile</span>
+                </a>
+            </li>
+            {% endif %}
+            {% if current_user.role == 'Project Manager' %}
+            <li class="nav-item">
+                <a class="nav-link {{ 'active' if request.endpoint == 'project_manager.my_profile' }}"
+                   href="{{ url_for('project_manager.my_profile') }}">
+                    <i class="bi bi-person-circle"></i> <span>My Profile</span>
+                </a>
+            </li>
+            {% endif %}
+            <li class="nav-item">
+                <a class="nav-link {{ 'active' if request.endpoint == 'auth.change_password' }}"
+                   href="{{ url_for('auth.change_password') }}">
+                    <i class="bi bi-key"></i> <span>Change Password</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('auth.logout') }}">
+                    <i class="bi bi-box-arrow-right"></i> <span>Logout</span>
+                </a>
+            </li>
+        </ul>
+    </div>
+</aside>
+<!-- Backdrop for mobile sidebar -->
+<div class="pia-sidebar-backdrop" id="pia-sidebar-backdrop"></div>

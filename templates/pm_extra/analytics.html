@@ -1,0 +1,128 @@
+{% extends 'base.html' %}
+{% block title %}My Analytics - Intern Onboarding Portal{% endblock %}
+
+{% block extra_head %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+    <h3 class="pia-page-title"><i class="bi bi-bar-chart-line me-2"></i>My Analytics</h3>
+    <span class="text-muted small">{{ projects_count }} project(s) &bull; {{ interns_count }} intern(s)</span>
+</div>
+
+<div class="row g-3 mb-3">
+    <div class="col-sm-4">
+        <div class="card pia-stat-card border-0 shadow-sm">
+            <div class="card-body">
+                <div class="pia-stat-value">{{ attendance_percentage }}%</div>
+                <div class="pia-stat-label">Attendance Percentage</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-4">
+        <div class="card pia-stat-card border-0 shadow-sm">
+            <div class="card-body">
+                <div class="pia-stat-value">{{ submission_rate }}%</div>
+                <div class="pia-stat-label">Submission Rate</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-4">
+        <div class="card pia-stat-card border-0 shadow-sm">
+            <div class="card-body">
+                <div class="pia-stat-value">
+                    {{ deadline_compliance[0].count }}/{{ deadline_compliance[0].count + deadline_compliance[1].count }}
+                </div>
+                <div class="pia-stat-label">Deadline Compliance (On Time)</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3">
+    <div class="col-lg-6">
+        <div class="card pia-card shadow-sm h-100">
+            <div class="card-header pia-card-header">Assigned Projects Status</div>
+            <div class="card-body"><canvas id="chartAnaProjectStatus" height="220"></canvas></div>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="card pia-card shadow-sm h-100">
+            <div class="card-header pia-card-header">Assigned Intern Performance (Avg %)</div>
+            <div class="card-body"><canvas id="chartAnaInternPerf" height="220"></canvas></div>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="card pia-card shadow-sm h-100">
+            <div class="card-header pia-card-header">Attendance Breakdown</div>
+            <div class="card-body"><canvas id="chartAnaAttendance" height="220"></canvas></div>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="card pia-card shadow-sm h-100">
+            <div class="card-header pia-card-header">Deadline Compliance</div>
+            <div class="card-body"><canvas id="chartAnaDeadline" height="220"></canvas></div>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="card pia-card shadow-sm h-100">
+            <div class="card-header pia-card-header">Evaluation Statistics (PM Forms)</div>
+            <div class="card-body"><canvas id="chartAnaEvaluation" height="220"></canvas></div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    const PIA_BLUE = '#01477a';
+    const PIA_GOLD = '#c9a24b';
+    const COLORS = ['#c9a24b', '#01477a', '#4f8fc7', '#7bb661', '#d9534f', '#6c757d'];
+
+    new Chart(document.getElementById('chartAnaProjectStatus'), {
+        type: 'doughnut',
+        data: {
+            labels: {{ project_status | map(attribute='label') | list | tojson }},
+            datasets: [{ data: {{ project_status | map(attribute='count') | list | tojson }}, backgroundColor: COLORS }]
+        },
+        options: { responsive: true, plugins: { legend: { position: 'bottom' } } }
+    });
+
+    new Chart(document.getElementById('chartAnaInternPerf'), {
+        type: 'bar',
+        data: {
+            labels: {{ intern_performance | map(attribute='label') | list | tojson }},
+            datasets: [{ label: 'Avg Score %', data: {{ intern_performance | map(attribute='count') | list | tojson }}, backgroundColor: PIA_GOLD, borderRadius: 4 }]
+        },
+        options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, max: 100 } } }
+    });
+
+    new Chart(document.getElementById('chartAnaAttendance'), {
+        type: 'pie',
+        data: {
+            labels: {{ attendance_breakdown | map(attribute='label') | list | tojson }},
+            datasets: [{ data: {{ attendance_breakdown | map(attribute='count') | list | tojson }}, backgroundColor: ['#7bb661', '#d9534f', '#c9a24b', '#4f8fc7'] }]
+        },
+        options: { responsive: true, plugins: { legend: { position: 'bottom' } } }
+    });
+
+    new Chart(document.getElementById('chartAnaDeadline'), {
+        type: 'doughnut',
+        data: {
+            labels: {{ deadline_compliance | map(attribute='label') | list | tojson }},
+            datasets: [{ data: {{ deadline_compliance | map(attribute='count') | list | tojson }}, backgroundColor: ['#7bb661', '#d9534f'] }]
+        },
+        options: { responsive: true, plugins: { legend: { position: 'bottom' } } }
+    });
+
+    new Chart(document.getElementById('chartAnaEvaluation'), {
+        type: 'doughnut',
+        data: {
+            labels: {{ evaluation_stats | map(attribute='label') | list | tojson }},
+            datasets: [{ data: {{ evaluation_stats | map(attribute='count') | list | tojson }}, backgroundColor: [PIA_BLUE, PIA_GOLD] }]
+        },
+        options: { responsive: true, plugins: { legend: { position: 'bottom' } } }
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,22 @@
+<!--
+    components/flash.html
+    ----------------------
+    Reusable flash message renderer. Included in base.html so any
+    route can call flash() and have it shown consistently everywhere.
+-->
+{% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        <div class="flash-container">
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }} alert-dismissible fade show shadow-sm" role="alert">
+                    {% if category == 'success' %}<i class="bi bi-check-circle-fill me-2"></i>{% endif %}
+                    {% if category == 'danger' %}<i class="bi bi-exclamation-triangle-fill me-2"></i>{% endif %}
+                    {% if category == 'warning' %}<i class="bi bi-exclamation-circle-fill me-2"></i>{% endif %}
+                    {% if category == 'info' %}<i class="bi bi-info-circle-fill me-2"></i>{% endif %}
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+{% endwith %}

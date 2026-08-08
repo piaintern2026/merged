@@ -1,0 +1,261 @@
+{% extends 'base.html' %}
+{% block title %}Milestones - {{ project.title }} - Intern Onboarding Portal{% endblock %}
+
+{% block content %}
+<div class="pia-table-toolbar">
+    <div>
+        <h3 class="pia-page-title mb-1"><i class="bi bi-flag me-2"></i>Milestones &amp; Timeline</h3>
+        <p class="pia-page-subtitle mb-0">{{ project.title }} &middot; {{ project.department.name }}</p>
+    </div>
+    <div class="pia-table-toolbar-actions">
+        <a href="{{ url_for('project.view_project', project_id=project.id) }}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-1"></i> Back to Project
+        </a>
+        {% if can_manage %}
+        <button type="button" class="btn pia-btn-primary" data-bs-toggle="modal" data-bs-target="#addMilestoneModal">
+            <i class="bi bi-plus-lg me-1"></i> Add Milestone
+        </button>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Overall completion -->
+<div class="card pia-card shadow-sm mb-3">
+    <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center mb-1">
+            <span class="fw-semibold">Overall Project Completion</span>
+            <span class="fw-bold">{{ project.completion_percentage }}%</span>
+        </div>
+        <div class="progress" style="height: 10px;">
+            <div class="progress-bar bg-success" style="width: {{ project.completion_percentage }}%;"></div>
+        </div>
+        <p class="text-muted small mt-2 mb-0">
+            {{ milestones | selectattr('is_active') | selectattr('status', 'equalto', 'Completed') | list | length }}
+            of {{ milestones | selectattr('is_active') | list | length }} milestone(s) completed.
+        </p>
+    </div>
+</div>
+
+<!-- Visual Timeline -->
+<div class="card pia-card shadow-sm mb-3">
+    <div class="pia-table-heading px-3 pt-3">
+        <h4 class="mb-0"><i class="bi bi-signpost-split me-2"></i>Project Timeline</h4>
+    </div>
+    <div class="card-body">
+        {% if milestones %}
+        <div class="pia-timeline">
+            {% for m in milestones %}
+            <div class="pia-timeline-item">
+                <div class="pia-timeline-marker
+                    {{ 'bg-success' if m.status == 'Completed'
+                       else 'bg-danger' if m.is_overdue
+                       else 'bg-warning' if m.status == 'In Progress'
+                       else 'bg-secondary' }}">
+                    {% if m.status == 'Completed' %}<i class="bi bi-check-lg"></i>{% endif %}
+                </div>
+                <div class="pia-timeline-content">
+                    <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
+                        <div>
+                            <strong>{{ m.title }}</strong>
+                            {% if m.description %}<div class="text-muted small">{{ m.description }}</div>{% endif %}
+                        </div>
+                        <span class="badge
+                            {{ 'text-bg-success' if m.status == 'Completed'
+                               else 'text-bg-danger' if m.is_overdue
+                               else 'text-bg-warning' if m.status == 'In Progress'
+                               else 'text-bg-secondary' }}">
+                            {{ 'Overdue' if m.is_overdue else m.status }}
+                        </span>
+                    </div>
+                    <small class="text-muted">Due {{ m.due_date.strftime('%d %b %Y') }}</small>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p class="text-muted text-center py-4 mb-0">No milestones added yet. Add one to start building the timeline.</p>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Milestones Table -->
+<div class="card pia-card shadow-sm">
+    <div class="pia-table-toolbar px-3 pt-3">
+        <h4 class="mb-0"><i class="bi bi-list-check me-2"></i>All Milestones</h4>
+        <div class="pia-table-search">
+            <i class="bi bi-search"></i>
+            <input type="text" class="form-control" data-table-search="milestonesTable"
+                   placeholder="Search milestones...">
+            <button type="button" class="pia-search-clear" aria-label="Clear search"><i class="bi bi-x-circle-fill"></i></button>
+        </div>
+        <select class="form-select form-select-sm" style="max-width: 180px;" data-table-filter="milestonesTable" data-filter-field="status">
+            <option value="">All Statuses</option>
+            {% for s in statuses %}
+            <option value="{{ s }}">{{ s }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="table-responsive pia-table-wrap">
+        <table class="table pia-table align-middle mb-0" id="milestonesTable" data-page-size="10">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Title</th>
+                    <th>Due Date</th>
+                    <th>Status</th>
+                    {% if can_manage %}<th class="text-end">Actions</th>{% endif %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for m in milestones %}
+                <tr data-search="{{ m.title | lower }}" data-status="{{ m.status }}">
+                    <td>{{ loop.index }}</td>
+                    <td class="fw-semibold">
+                        {{ m.title }}
+                        {% if m.description %}<div class="text-muted small">{{ m.description }}</div>{% endif %}
+                    </td>
+                    <td data-sort-value="{{ m.due_date.isoformat() }}">
+                        <span class="{{ 'text-danger fw-bold' if m.is_overdue else '' }}">{{ m.due_date.strftime('%d %b %Y') }}</span>
+                    </td>
+                    <td>
+                        <span class="badge
+                            {{ 'text-bg-success' if m.status == 'Completed'
+                               else 'text-bg-danger' if m.is_overdue
+                               else 'text-bg-warning' if m.status == 'In Progress'
+                               else 'text-bg-secondary' }}">
+                            {{ 'Overdue' if m.is_overdue else m.status }}
+                        </span>
+                        {% if not m.is_active %}
+                        <span class="badge text-bg-secondary">Disabled</span>
+                        {% endif %}
+                    </td>
+                    {% if can_manage %}
+                    <td class="text-end text-nowrap">
+                        <form method="POST" action="{{ url_for('pm_workspace.complete_milestone', milestone_id=m.id) }}" class="d-inline">
+                            <button type="submit" class="btn btn-sm btn-outline-success" title="{{ 'Reopen' if m.status == 'Completed' else 'Mark Complete' }}">
+                                <i class="bi bi-{{ 'arrow-counterclockwise' if m.status == 'Completed' else 'check-lg' }}"></i>
+                            </button>
+                        </form>
+                        <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#editMilestone{{ m.id }}" title="Edit">
+                            <i class="bi bi-pencil-square"></i>
+                        </button>
+                        <form method="POST" action="{{ url_for('pm_workspace.toggle_milestone_status', milestone_id=m.id) }}" class="d-inline">
+                            <button type="submit" class="btn btn-sm btn-outline-warning" title="{{ 'Disable' if m.is_active else 'Enable' }}">
+                                <i class="bi {{ 'bi-toggle-off' if m.is_active else 'bi-toggle2-on' }}"></i>
+                            </button>
+                        </form>
+
+                        <!-- Edit Modal -->
+                        <div class="modal fade" id="editMilestone{{ m.id }}" tabindex="-1">
+                            <div class="modal-dialog modal-dialog-centered">
+                                <div class="modal-content">
+                                    <form method="POST" action="{{ url_for('pm_workspace.edit_milestone', milestone_id=m.id) }}">
+                                        <div class="modal-header">
+                                            <h5 class="modal-title">Edit Milestone</h5>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                        </div>
+                                        <div class="modal-body">
+                                            <div class="mb-3">
+                                                <label class="form-label">Title</label>
+                                                <input type="text" name="title" class="form-control" value="{{ m.title }}" required>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label class="form-label">Description</label>
+                                                <textarea name="description" class="form-control" rows="2">{{ m.description or '' }}</textarea>
+                                            </div>
+                                            <div class="row g-2">
+                                                <div class="col-6">
+                                                    <label class="form-label">Due Date</label>
+                                                    <input type="date" name="due_date" class="form-control" value="{{ m.due_date.isoformat() }}" required>
+                                                </div>
+                                                <div class="col-6">
+                                                    <label class="form-label">Status</label>
+                                                    <select name="status" class="form-select">
+                                                        {% for s in statuses %}
+                                                        <option value="{{ s }}" {{ 'selected' if s == m.status }}>{{ s }}</option>
+                                                        {% endfor %}
+                                                    </select>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                                            <button type="submit" class="btn pia-btn-primary">Save Changes</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+
+                    </td>
+                    {% endif %}
+                </tr>
+                {% else %}
+                <tr><td colspan="5" class="text-center text-muted py-4">No milestones yet.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <div class="px-3 pb-3" data-pagination-for="milestonesTable"></div>
+</div>
+
+{% if can_manage %}
+<!-- Add Milestone Modal -->
+<div class="modal fade" id="addMilestoneModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <form method="POST" action="{{ url_for('pm_workspace.add_milestone', project_id=project.id) }}">
+                <div class="modal-header">
+                    <h5 class="modal-title">Add Milestone</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Title</label>
+                        <input type="text" name="title" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Description</label>
+                        <textarea name="description" class="form-control" rows="2"></textarea>
+                    </div>
+                    <div class="row g-2">
+                        <div class="col-6">
+                            <label class="form-label">Due Date</label>
+                            <input type="date" name="due_date" class="form-control" required>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label">Status</label>
+                            <select name="status" class="form-select">
+                                {% for s in statuses %}
+                                <option value="{{ s }}">{{ s }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn pia-btn-primary">Add Milestone</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<style>
+.pia-timeline { position: relative; padding-left: 2rem; }
+.pia-timeline::before {
+    content: ""; position: absolute; left: 0.6rem; top: 0.4rem; bottom: 0.4rem;
+    width: 2px; background: var(--bs-border-color, #dee2e6);
+}
+.pia-timeline-item { position: relative; padding-bottom: 1.5rem; }
+.pia-timeline-item:last-child { padding-bottom: 0; }
+.pia-timeline-marker {
+    position: absolute; left: -2rem; top: 0.15rem; width: 1.25rem; height: 1.25rem;
+    border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    color: #fff; font-size: 0.7rem;
+}
+.pia-timeline-content { padding-left: 0.5rem; }
+</style>
+{% endblock %}

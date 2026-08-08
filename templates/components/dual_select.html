@@ -1,0 +1,68 @@
+{#
+    components/dual_select.html
+    ----------------------------
+    Reusable searchable dual-list ("transfer list") multi-select widget.
+
+    Renders a real <select multiple name="{{ field_name }}"> under the
+    hood -- kept in sync by JS -- so the existing backend logic (which
+    reads the field via request.form.getlist("assigned_intern_ids")) is
+    completely untouched. The visible UI is two panels: a searchable
+    "Available" list on the left and a "Selected" list on the right,
+    each item movable with a single click.
+
+    Usage:
+        {% from 'components/dual_select.html' import dual_select %}
+        {{ dual_select('assigned_intern_ids', interns, selected_ids, 'pmInterns') }}
+
+    Params:
+        field_name    - form field name submitted to the backend
+        items         - iterable of objects with .id and a display label
+        selected_ids  - list/set of ids that should start pre-selected
+        widget_id     - unique id for this widget instance (needed when
+                         a page could render more than one dual_select)
+        label_for     - optional callable(item) -> str; defaults to a
+                         "Name - City - Department" style label already
+                         built by the caller via item.full_name/.city/.department
+#}
+{% macro dual_select(field_name, items, selected_ids, widget_id, empty_text='No interns available.') %}
+<div class="pia-dual-select" data-widget-id="{{ widget_id }}">
+    <select id="{{ widget_id }}-select" name="{{ field_name }}" multiple class="d-none">
+        {% for item in items %}
+        <option value="{{ item.id }}" data-city="{{ item.city or '' }}" data-department-id="{{ item.department_id or '' }}" {{ 'selected' if item.id in selected_ids }}>{{ item.full_name }} — {{ item.city }} — {{ item.department.name if item.department else '—' }}</option>
+        {% endfor %}
+    </select>
+
+    {% if not items %}
+    <div class="text-muted small fst-italic py-2">{{ empty_text }}</div>
+    {% else %}
+    <div class="pia-dual-select-ui">
+        <div class="pia-dual-panel">
+            <div class="pia-dual-panel-head">
+                <span><i class="bi bi-people me-1"></i>Available</span>
+                <span class="badge pia-dual-count" data-role="available-count">0</span>
+            </div>
+            <div class="pia-dual-search-wrap">
+                <i class="bi bi-search"></i>
+                <input type="text" class="pia-dual-search" placeholder="Search interns by name, city or department...">
+            </div>
+            <div class="pia-dual-list" data-role="available-list"></div>
+        </div>
+
+        <div class="pia-dual-actions">
+            <i class="bi bi-arrow-left-right"></i>
+        </div>
+
+        <div class="pia-dual-panel">
+            <div class="pia-dual-panel-head">
+                <span><i class="bi bi-check2-square me-1"></i>Selected</span>
+                <span class="badge pia-dual-count pia-dual-count-selected" data-role="selected-count">0</span>
+            </div>
+            <div class="pia-dual-list" data-role="selected-list">
+                <div class="pia-dual-empty" data-role="selected-empty">No interns selected yet. Click an intern on the left to add them.</div>
+            </div>
+        </div>
+    </div>
+    <div class="form-text">Click an intern to add or remove them. Use the search box to filter by name, city or department.</div>
+    {% endif %}
+</div>
+{% endmacro %}

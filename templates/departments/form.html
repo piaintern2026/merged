@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+{% block title %}{{ 'Edit' if department else 'Add' }} Department - Intern Onboarding Portal{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h3 class="pia-page-title">
+        <i class="bi bi-building me-2"></i>{{ 'Edit' if department else 'Add' }} Department
+    </h3>
+    <a href="{{ url_for('department.list_departments') }}" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left me-1"></i> Back to List
+    </a>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-lg-7">
+        <div class="card pia-card shadow-sm">
+            <div class="card-body p-4">
+                <form method="POST" novalidate>
+                    <div class="mb-3">
+                        <label for="name" class="form-label">Department <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="name" name="name" required
+                               placeholder="Type a department name&hellip;"
+                               value="{{ department.name if department else request.form.get('name', '') }}">
+                        <div class="form-text">Type the department name -- it will be saved to the database automatically after validation.</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="sub_department" class="form-label">Division/Section <span class="text-muted small">(optional)</span></label>
+                        <input type="text" class="form-control" id="sub_department" name="sub_department"
+                               placeholder="e.g. Ramp Services (leave blank to skip)"
+                               value="{{ request.form.get('sub_department', '') if request.method == 'POST' else '' }}">
+                        <div class="form-text">Optional -- you can create the department without a division/section and add one later from Edit.</div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="city" class="form-label">City <span class="text-danger">*</span></label>
+                        <select class="form-select" id="city" name="city" required>
+                            <option value="" disabled {{ 'selected' if not department }}>Select a city&hellip;</option>
+                            {% for c in cities %}
+                            <option value="{{ c }}" {{ 'selected' if department and department.city == c }}>{{ c }}</option>
+                            {% endfor %}
+                        </select>
+                        <div class="form-text">The organization has interns and departments across multiple cities -- select which city this department operates in.</div>
+                    </div>
+
+                    {% if department %}
+                    <div class="mb-4 form-check form-switch">
+                        <input type="checkbox" class="form-check-input" id="is_active" name="is_active"
+                               {{ 'checked' if department.is_active }}>
+                        <label class="form-check-label" for="is_active">Active</label>
+                        <div class="form-text">Uncheck to disable this department (hides it from pickers for new PMs/interns/projects; existing links are preserved).</div>
+                    </div>
+                    {% endif %}
+
+                    <button type="submit" class="btn pia-btn-primary">
+                        <i class="bi bi-check-circle me-1"></i> {{ 'Update' if department else 'Save' }} Department
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

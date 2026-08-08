@@ -1,0 +1,314 @@
+{% extends 'base.html' %}
+{% block title %}My Dashboard - Intern Onboarding Portal{% endblock %}
+
+{% block content %}
+<!-- Welcome message -->
+<div class="pia-welcome-banner mb-4">
+    <div>
+        <h3 class="mb-1">Welcome, {{ current_user.display_name() }} 👋</h3>
+        <p class="mb-0 text-white-50">
+            Intern &bull; {{ intern.department.name if intern.department else '—' }} &bull;
+            {{ intern.internship_start_date.strftime('%d %b %Y') }} to {{ intern.internship_end_date.strftime('%d %b %Y') }}
+        </p>
+    </div>
+    <i class="bi bi-mortarboard-fill pia-welcome-icon"></i>
+</div>
+
+<!-- Key stats: progress, days remaining, pending tasks, next rotation -->
+<div class="row g-3 mb-4">
+    <div class="col-6 col-md-3">
+        <div class="card pia-stat-card border-0 shadow-sm h-100">
+            <div class="card-body text-center">
+                <div class="small text-muted">Internship Progress</div>
+                <div class="fw-bold fs-4">{{ internship_progress_percent }}%</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="card pia-stat-card border-0 shadow-sm h-100">
+            <div class="card-body text-center">
+                <div class="small text-muted">Days Remaining</div>
+                <div class="fw-bold fs-4">{{ days_remaining }}</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="card pia-stat-card border-0 shadow-sm h-100">
+            <div class="card-body text-center">
+                <div class="small text-muted">Pending Tasks</div>
+                <div class="fw-bold fs-4">{{ pending_tasks|length }}</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="card pia-stat-card border-0 shadow-sm h-100">
+            <div class="card-body text-center">
+                <div class="small text-muted">Rotation Since</div>
+                <div class="fw-bold fs-5">
+                    {{ next_rotation_date.strftime('%d %b %Y') if next_rotation_date else '—' }}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3 mb-4">
+    <!-- Assigned Project / Manager / Department -->
+    <div class="col-lg-7">
+        <div class="card pia-card shadow-sm h-100">
+            <div class="card-header pia-card-header">
+                <i class="bi bi-kanban me-2"></i>My Assigned Project{{ 's' if assigned_projects|length > 1 else '' }}
+                {% if assigned_projects|length > 1 %}<span class="badge text-bg-secondary ms-1">{{ assigned_projects|length }}</span>{% endif %}
+            </div>
+            <div class="card-body">
+                {% if assigned_project %}
+                <h5 class="mb-1">{{ assigned_project.title }}</h5>
+                <p class="text-muted mb-3">{{ assigned_project.description or 'No description provided.' }}</p>
+                <div class="row g-3">
+                    <div class="col-sm-6">
+                        <div class="small text-muted">Department</div>
+                        <div class="fw-semibold">{{ intern.department.name if intern.department else '—' }}</div>
+                    </div>
+                    <div class="col-sm-6">
+                        <div class="small text-muted">Assigned Manager</div>
+                        <div class="fw-semibold">
+                            {{ assigned_project.manager.full_name if assigned_project.manager else 'Not yet assigned' }}
+                        </div>
+                    </div>
+                    <div class="col-sm-6">
+                        <div class="small text-muted">Deadline</div>
+                        <div class="fw-semibold {{ 'text-danger' if assigned_project.is_overdue() }}">
+                            {{ assigned_project.deadline.strftime('%d %b %Y') }}
+                        </div>
+                    </div>
+                    <div class="col-sm-6">
+                        <div class="small text-muted">Status</div>
+                        <span class="badge
+                            {{ 'text-bg-success' if assigned_project.status in ['Completed', 'Approved']
+                               else 'text-bg-danger' if assigned_project.status == 'Rejected'
+                               else 'text-bg-primary' if assigned_project.status == 'Submitted'
+                               else 'text-bg-warning' if assigned_project.status == 'Working'
+                               else 'text-bg-secondary' }}">
+                            {{ assigned_project.status }}
+                        </span>
+                    </div>
+                </div>
+                {% if assigned_projects|length > 1 %}
+                <hr>
+                <div class="small text-muted mb-2">Other assigned projects</div>
+                <ul class="list-unstyled mb-0">
+                    {% for p in assigned_projects if p.id != assigned_project.id %}
+                    <li class="d-flex justify-content-between align-items-center mb-1">
+                        <span>{{ p.title }}</span>
+                        <span class="badge
+                            {{ 'text-bg-success' if p.status in ['Completed', 'Approved']
+                               else 'text-bg-danger' if p.status == 'Rejected'
+                               else 'text-bg-primary' if p.status == 'Submitted'
+                               else 'text-bg-warning' if p.status == 'Working'
+                               else 'text-bg-secondary' }}">{{ p.status }}</span>
+                    </li>
+                    {% endfor %}
+                </ul>
+                {% endif %}
+                {% else %}
+                <div class="text-center text-muted py-4">
+                    <i class="bi bi-inbox display-6 d-block mb-2"></i>
+                    No project has been assigned to you yet.
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Attendance + Progress -->
+    <div class="col-lg-5">
+        <div class="card pia-stat-card border-0 shadow-sm mb-3">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="pia-stat-label">Attendance Percentage</span>
+                    <span class="fw-bold">{{ attendance_percentage }}%</span>
+                </div>
+                <div class="progress" style="height: 10px;">
+                    <div class="progress-bar bg-success" role="progressbar"
+                         style="width: {{ attendance_percentage }}%;"
+                         aria-valuenow="{{ attendance_percentage }}" aria-valuemin="0" aria-valuemax="100"></div>
+                </div>
+                <div class="small text-muted mt-2">
+                    {{ present_count }} present out of {{ total_attendance }} marked day(s)
+                </div>
+                <div class="small text-muted mt-1">
+                    <span class="text-success">{{ present_count }} Present</span> &bull;
+                    <span class="text-danger">{{ absent_count }} Absent</span> &bull;
+                    <span class="text-warning">{{ leave_count }} Leave</span>
+                </div>
+                <hr class="my-3">
+                {% if today_attendance %}
+                    {% if today_attendance.is_leave_managed %}
+                    <div class="d-flex align-items-center text-warning small fw-semibold">
+                        <i class="bi bi-calendar2-week me-2 fs-5"></i> You are on approved Leave today.
+                    </div>
+                    {% else %}
+                    <div class="small mb-2">
+                        <div class="d-flex align-items-center text-success fw-semibold mb-1">
+                            <i class="bi bi-check-circle-fill me-2 fs-5"></i>
+                            Clocked in at {{ today_attendance.time.strftime('%I:%M %p') if today_attendance.time else '-' }}
+                        </div>
+                        {% if today_attendance.time_out %}
+                        <div class="d-flex align-items-center text-muted fw-semibold">
+                            <i class="bi bi-box-arrow-right me-2 fs-5"></i>
+                            Clocked out at {{ today_attendance.time_out.strftime('%I:%M %p') }}
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% if not today_attendance.time_out %}
+                    <form method="POST" action="{{ url_for('intern_portal.clock_out') }}">
+                        <button type="submit" class="btn btn-outline-primary w-100">
+                            <i class="bi bi-box-arrow-right me-1"></i> Clock Out
+                        </button>
+                    </form>
+                    {% endif %}
+                    {% endif %}
+                {% else %}
+                <form method="POST" action="{{ url_for('intern_portal.clock_in') }}">
+                    <button type="submit" class="btn pia-btn-primary w-100">
+                        <i class="bi bi-box-arrow-in-right me-1"></i> Clock In
+                    </button>
+                </form>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="card pia-stat-card border-0 shadow-sm mb-3">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="pia-stat-label">Current Progress</span>
+                    <span class="fw-bold">{{ current_progress }}%</span>
+                </div>
+                <div class="progress" style="height: 10px;">
+                    <div class="progress-bar pia-progress-bar" role="progressbar"
+                         style="width: {{ current_progress }}%;"
+                         aria-valuenow="{{ current_progress }}" aria-valuemin="0" aria-valuemax="100"></div>
+                </div>
+                <div class="small text-muted mt-2">Based on your latest Daily Work Log entry</div>
+            </div>
+        </div>
+
+        <div class="card pia-stat-card border-0 shadow-sm">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="pia-stat-label">Project Progress</span>
+                    <span class="fw-bold">{{ project_progress }}%</span>
+                </div>
+                <div class="progress" style="height: 10px;">
+                    <div class="progress-bar bg-info" role="progressbar"
+                         style="width: {{ project_progress }}%;"
+                         aria-valuenow="{{ project_progress }}" aria-valuemin="0" aria-valuemax="100"></div>
+                </div>
+                <div class="small text-muted mt-2">Share of your project's milestones completed</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Pending Tasks + Upcoming Deadlines -->
+<div class="row g-3 mb-4">
+    <div class="col-lg-6">
+        <div class="card pia-card shadow-sm h-100">
+            <div class="card-header pia-card-header">
+                <i class="bi bi-list-task me-2"></i>Pending Tasks
+            </div>
+            <ul class="list-group list-group-flush">
+                {% for task in pending_tasks %}
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <span>{{ task.title }}</span>
+                    <span class="small text-muted">Due {{ task.due_date.strftime('%d %b %Y') }}</span>
+                </li>
+                {% else %}
+                <li class="list-group-item text-muted text-center py-4">No pending tasks. Great job!</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="card pia-card shadow-sm h-100">
+            <div class="card-header pia-card-header">
+                <i class="bi bi-calendar-event me-2"></i>Upcoming Deadlines
+            </div>
+            <ul class="list-group list-group-flush">
+                {% for d in upcoming_deadlines %}
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <span>{{ d.label }} <span class="badge text-bg-light border">{{ d.kind }}</span></span>
+                    <span class="small text-muted">{{ d.date.strftime('%d %b %Y') }}</span>
+                </li>
+                {% else %}
+                <li class="list-group-item text-muted text-center py-4">No upcoming deadlines.</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+</div>
+
+<!-- Quick actions -->
+<div class="row g-3 mb-4">
+    <div class="col-6 col-md-3">
+        <a href="{{ url_for('intern_portal.submissions') }}" class="card pia-quick-action text-decoration-none">
+            <div class="card-body text-center">
+                <i class="bi bi-cloud-upload display-6 text-primary"></i>
+                <div class="fw-semibold mt-2">Submit Project</div>
+            </div>
+        </a>
+    </div>
+    <div class="col-6 col-md-3">
+        <a href="{{ url_for('message.inbox') }}" class="card pia-quick-action text-decoration-none">
+            <div class="card-body text-center">
+                <i class="bi bi-chat-dots display-6 text-info"></i>
+                <div class="fw-semibold mt-2">Messages</div>
+            </div>
+        </a>
+    </div>
+    <div class="col-6 col-md-3">
+        <a href="{{ url_for('intern_portal.final_report') }}" class="card pia-quick-action text-decoration-none">
+            <div class="card-body text-center">
+                <i class="bi bi-file-earmark-check display-6 text-warning"></i>
+                <div class="fw-semibold mt-2">Final Report</div>
+            </div>
+        </a>
+    </div>
+    <div class="col-6 col-md-3">
+        <a href="{{ url_for('intern_portal.my_evaluations') }}" class="card pia-quick-action text-decoration-none">
+            <div class="card-body text-center">
+                <i class="bi bi-clipboard-check display-6 text-success"></i>
+                <div class="fw-semibold mt-2">My Evaluations</div>
+            </div>
+        </a>
+    </div>
+</div>
+
+<!-- Notifications -->
+<div class="card pia-card shadow-sm" id="notifications">
+    <div class="card-header pia-card-header d-flex justify-content-between align-items-center">
+        <span><i class="bi bi-bell-fill me-2"></i>Notifications</span>
+        {% if unread_count > 0 %}
+        <form method="POST" action="{{ url_for('intern_portal.mark_notifications_read') }}">
+            <button type="submit" class="btn btn-sm btn-outline-secondary">Mark all as read</button>
+        </form>
+        {% endif %}
+    </div>
+    <ul class="list-group list-group-flush">
+        {% for note in notifications %}
+        <li class="list-group-item d-flex align-items-start {{ 'bg-light' if not note.is_read }}">
+            <i class="bi {{ note.icon }} text-primary me-3 mt-1"></i>
+            <div class="flex-grow-1">
+                <div>{{ note.message }}</div>
+                <small class="text-muted">{{ note.created_at.strftime('%d %b %Y, %I:%M %p') }}</small>
+            </div>
+            {% if not note.is_read %}
+            <span class="badge text-bg-primary ms-2">New</span>
+            {% endif %}
+        </li>
+        {% else %}
+        <li class="list-group-item text-muted text-center py-4">You have no notifications yet.</li>
+        {% endfor %}
+    </ul>
+</div>
+{% endblock %}

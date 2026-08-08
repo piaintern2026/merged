@@ -1,0 +1,234 @@
+{% extends 'base.html' %}
+{% block title %}{{ project.title }} - Intern Onboarding Portal{% endblock %}
+
+{% block content %}
+<div class="pia-table-toolbar">
+    <div>
+        <h3 class="pia-page-title mb-1"><i class="bi bi-kanban me-2"></i>{{ project.title }}</h3>
+        <p class="pia-page-subtitle mb-0">
+            {{ project.department.name }}{% if project.sub_department %} / {{ project.sub_department.name }}{% endif %} &middot;
+            Manager: {{ project.manager.full_name if project.manager else '—' }} &middot;
+            Interns: {{ (project.interns | map(attribute='full_name') | join(', ')) if project.interns else '—' }}
+        </p>
+    </div>
+    <div class="pia-table-toolbar-actions">
+        <a href="{{ url_for('project.list_projects') }}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-1"></i> Back to Projects
+        </a>
+    </div>
+</div>
+
+<div class="card pia-card shadow-sm mb-3">
+    <div class="card-body row g-3">
+        <div class="col-md-3">
+            <div class="small text-muted">Interns Assigned</div>
+            <div class="fw-semibold">{{ project.interns | length }}</div>
+        </div>
+        <div class="col-md-3">
+            <div class="small text-muted">Status</div>
+            <span class="badge
+                {{ 'text-bg-success' if project.status in ['Completed', 'Approved']
+                   else 'text-bg-danger' if project.status == 'Rejected'
+                   else 'text-bg-primary' if project.status == 'Submitted'
+                   else 'text-bg-warning' if project.status == 'Working'
+                   else 'text-bg-secondary' }}">
+                {{ project.status }}
+            </span>
+        </div>
+        <div class="col-md-3">
+            <div class="small text-muted">Start Date</div>
+            {{ project.start_date.strftime('%d %b %Y') }}
+        </div>
+        <div class="col-md-3">
+            <div class="small text-muted">Deadline</div>
+            <span class="{{ 'text-danger fw-bold' if project.is_overdue() else '' }}">
+                {{ project.deadline.strftime('%d %b %Y') }}
+            </span>
+        </div>
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-1">
+                <span class="small text-muted">Overall Completion</span>
+                <span class="small fw-bold">{{ project.completion_percentage }}%</span>
+            </div>
+            <div class="progress" style="height: 8px;">
+                <div class="progress-bar bg-success" style="width: {{ project.completion_percentage }}%;"></div>
+            </div>
+        </div>
+        {% if project.description %}
+        <div class="col-12">
+            <div class="small text-muted">Description</div>
+            {{ project.description }}
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<div class="row g-3 mb-3">
+    <div class="col-md-6">
+        <div class="card pia-card shadow-sm h-100">
+            <div class="card-body d-flex justify-content-between align-items-center">
+                <div>
+                    <h6 class="mb-1"><i class="bi bi-flag me-2"></i>Milestones &amp; Timeline</h6>
+                    <p class="text-muted small mb-0">
+                        {{ (project.milestones | selectattr('is_active') | selectattr('status', 'equalto', 'Completed') | list | length) }}
+                        of {{ (project.milestones | selectattr('is_active') | list | length) }} milestone(s) completed.
+                    </p>
+                </div>
+                <a href="{{ url_for('pm_workspace.milestones', project_id=project.id) }}" class="btn btn-outline-primary text-nowrap">
+                    <i class="bi bi-signpost-split me-1"></i> View Timeline
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card pia-card shadow-sm">
+    <div class="pia-table-toolbar px-3 pt-3">
+        <div>
+            <h4 class="mb-0"><i class="bi bi-file-earmark-arrow-up me-2"></i>Submitted Tasks &amp; Approvals</h4>
+            <p class="text-muted small mb-0">
+                Station HR and the Project Manager each review every submission independently &mdash; approve or reject with remarks.
+            </p>
+        </div>
+        <div class="pia-table-search">
+            <i class="bi bi-search"></i>
+            <input type="text" class="form-control" data-table-search="submissionsTable"
+                   placeholder="Search submissions...">
+            <button type="button" class="pia-search-clear" aria-label="Clear search"><i class="bi bi-x-circle"></i></button>
+        </div>
+    </div>
+    <div class="table-responsive pia-table-wrap">
+        <table class="table pia-table align-middle mb-0" id="submissionsTable" data-page-size="10">
+            <thead>
+                <tr>
+                    <th>Link / File</th>
+                    <th>Submitted</th>
+                    <th>Station HR Review</th>
+                    <th>PM Review</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for s in submissions %}
+                <tr data-search="{{ (s.link or '') | lower }} {{ (s.original_filename or '') | lower }} {{ (s.notes or '') | lower }}">
+                    <td style="max-width: 260px;">
+                        {% if s.link %}
+                        <a href="{{ s.link|safe_link }}" target="_blank" rel="noopener noreferrer" title="{{ s.link }}" class="text-truncate d-inline-block" style="max-width: 240px; vertical-align: middle;">
+                            <i class="bi bi-link-45deg me-1"></i>{{ s.link }}
+                        </a>
+                        {% endif %}
+                        {% if s.stored_reference %}
+                        <div class="{{ 'small' if s.link else '' }}">
+                            <a href="{{ resolve_file_url(s.stored_reference, 'submissions') }}" target="_blank" rel="noopener noreferrer">
+                                <i class="bi bi-paperclip me-1"></i>{{ s.original_filename }}
+                            </a>
+                        </div>
+                        {% endif %}
+                        {% if s.notes %}<div class="small text-muted">{{ s.notes }}</div>{% endif %}
+                    </td>
+                    <td class="text-nowrap">{{ s.submitted_at | pkt }}</td>
+
+                    <!-- Station HR Review -->
+                    <td style="min-width: 240px;">
+                        <span class="badge mb-1
+                            {{ 'text-bg-success' if s.hr_status == 'Approved'
+                               else 'text-bg-danger' if s.hr_status == 'Rejected'
+                               else 'text-bg-secondary' }}">
+                            {{ s.hr_status }}
+                        </span>
+                        {% if s.hr_remarks %}
+                        <div class="small text-muted">{{ s.hr_remarks }}</div>
+                        {% endif %}
+                        {% if s.hr_reviewed_at %}
+                        <div class="small text-muted">by {{ s.hr_reviewed_by.full_name if s.hr_reviewed_by else 'Station HR' }} &middot; {{ s.hr_reviewed_at | pkt }}</div>
+                        {% endif %}
+                        {% if current_user.role in ['Station HR', 'Super Admin'] %}
+                        <button type="button" class="btn btn-sm btn-outline-primary mt-1" data-bs-toggle="modal" data-bs-target="#hrReview{{ s.id }}">
+                            <i class="bi bi-pencil-square me-1"></i>{{ 'Review' if s.hr_status == 'Pending' else 'Update' }}
+                        </button>
+                        <div class="modal fade" id="hrReview{{ s.id }}" tabindex="-1">
+                            <div class="modal-dialog modal-dialog-centered">
+                                <div class="modal-content">
+                                    <form method="POST" action="{{ url_for('project.hr_review_submission', submission_id=s.id) }}">
+                                        <div class="modal-header">
+                                            <h5 class="modal-title">Station HR Review</h5>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                        </div>
+                                        <div class="modal-body">
+                                            <div class="mb-3">
+                                                <label class="form-label">Remarks / Comments</label>
+                                                <textarea class="form-control" name="remarks" rows="3"
+                                                          placeholder="Feedback for the intern...">{{ s.hr_remarks or '' }}</textarea>
+                                            </div>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="submit" name="decision" value="Rejected" class="btn btn-outline-danger">
+                                                <i class="bi bi-x-circle me-1"></i>Reject
+                                            </button>
+                                            <button type="submit" name="decision" value="Approved" class="btn pia-btn-primary">
+                                                <i class="bi bi-check-circle me-1"></i>Approve
+                                            </button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </td>
+
+                    <!-- Project Manager Review -->
+                    <td style="min-width: 240px;">
+                        <span class="badge mb-1
+                            {{ 'text-bg-success' if s.pm_status == 'Approved'
+                               else 'text-bg-danger' if s.pm_status == 'Rejected'
+                               else 'text-bg-secondary' }}">
+                            {{ s.pm_status }}
+                        </span>
+                        {% if s.pm_remarks %}
+                        <div class="small text-muted">{{ s.pm_remarks }}</div>
+                        {% endif %}
+                        {% if s.pm_reviewed_at %}
+                        <div class="small text-muted">by {{ s.pm_reviewed_by.full_name if s.pm_reviewed_by else 'PM' }} &middot; {{ s.pm_reviewed_at | pkt }}</div>
+                        {% endif %}
+                        {% if current_user.role == 'Project Manager' %}
+                        <button type="button" class="btn btn-sm btn-outline-primary mt-1" data-bs-toggle="modal" data-bs-target="#pmReview{{ s.id }}">
+                            <i class="bi bi-pencil-square me-1"></i>{{ 'Review' if s.pm_status == 'Pending' else 'Update' }}
+                        </button>
+                        <div class="modal fade" id="pmReview{{ s.id }}" tabindex="-1">
+                            <div class="modal-dialog modal-dialog-centered">
+                                <div class="modal-content">
+                                    <form method="POST" action="{{ url_for('project.pm_review_submission', submission_id=s.id) }}">
+                                        <div class="modal-header">
+                                            <h5 class="modal-title">Project Manager Review</h5>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                        </div>
+                                        <div class="modal-body">
+                                            <div class="mb-3">
+                                                <label class="form-label">Remarks / Comments</label>
+                                                <textarea class="form-control" name="remarks" rows="3"
+                                                          placeholder="Feedback for the intern...">{{ s.pm_remarks or '' }}</textarea>
+                                            </div>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="submit" name="decision" value="Rejected" class="btn btn-outline-danger">
+                                                <i class="bi bi-x-circle me-1"></i>Reject
+                                            </button>
+                                            <button type="submit" name="decision" value="Approved" class="btn pia-btn-primary">
+                                                <i class="bi bi-check-circle me-1"></i>Approve
+                                            </button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% else %}
+                <tr><td colspan="4" class="text-center text-muted py-4">No submissions yet for this project.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <div class="px-3 pb-3" data-pagination-for="submissionsTable"></div>
+</div>
+{% endblock %}

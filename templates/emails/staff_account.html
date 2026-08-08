@@ -1,0 +1,49 @@
+{% extends "emails/base_email.html" %}
+{% block title %}Your {{ role }} Account Has Been Created{% endblock %}
+{% block preheader %}Your login credentials for the Intern Onboarding Portal.{% endblock %}
+
+{% block body %}
+<h2 style="margin:0 0 16px 0; font-family:'Segoe UI',Arial,sans-serif; color:#01411C; font-size:20px;">
+    Welcome, {{ full_name }}!
+</h2>
+
+<p style="margin:0 0 16px 0; font-family:'Segoe UI',Arial,sans-serif; font-size:14px; color:#1E1E1E; line-height:1.6;">
+    A <strong>{{ role }}</strong> account has been created for you on the Intern Onboarding Portal
+    {% if created_by %}by {{ created_by }}{% endif %}. Use the credentials below to log in.
+</p>
+
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0"
+       style="background-color:#F8F9F7; border:1px solid #D8DCCF; border-radius:10px; margin:20px 0;">
+    <tr>
+        <td style="padding:18px 22px; font-family:'Segoe UI',Arial,sans-serif; font-size:14px; color:#1E1E1E; line-height:2;">
+            <strong>Username:</strong> {{ username }}<br>
+            <strong>Email:</strong> {{ email }}<br>
+            <strong>Temporary Password:</strong> <span style="font-family:monospace; background:#EDE9D8; padding:2px 8px; border-radius:4px;">{{ password }}</span>
+        </td>
+    </tr>
+</table>
+
+<p style="margin:0 0 12px 0; font-family:'Segoe UI',Arial,sans-serif; font-size:14px; color:#1E1E1E; line-height:1.6;">
+    You can log in using your email address and password.
+</p>
+
+<p style="margin:0 0 20px 0; font-family:'Segoe UI',Arial,sans-serif; font-size:13px; color:#C62828; line-height:1.6;">
+    For your security, please log in and change this temporary password as soon as possible.
+</p>
+
+<table role="presentation" cellpadding="0" cellspacing="0">
+    <tr>
+        <td style="border-radius:8px; background-color:#01411C;">
+            <a href="{{ login_url }}" target="_blank"
+               style="display:inline-block; padding:12px 28px; font-family:'Segoe UI',Arial,sans-serif; font-size:14px; font-weight:600; color:#FFFFFF; text-decoration:none; border-radius:8px;">
+                Login to FTOP
+            </a>
+        </td>
+    </tr>
+</table>
+
+<p style="margin:20px 0 0 0; font-family:'Segoe UI',Arial,sans-serif; font-size:13px; color:#5E6A61; line-height:1.6;">
+    Questions? Contact Station HR at
+    <a href="mailto:{{ hr_contact_email }}" style="color:#1F5F3A;">{{ hr_contact_email }}</a>.
+</p>
+{% endblock %}

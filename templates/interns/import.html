@@ -1,0 +1,238 @@
+{% extends 'base.html' %}
+{% block title %}Import Interns - Intern Onboarding Portal{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h3 class="pia-page-title mb-1"><i class="bi bi-file-earmark-excel me-2"></i>Import Interns</h3>
+        <p class="pia-page-subtitle mb-0">Bulk-register interns from an Excel (.xlsx) or CSV file. User accounts are created automatically for each row.</p>
+    </div>
+    <a href="{{ url_for('intern.list_interns') }}" class="btn btn-outline-secondary text-nowrap">
+        <i class="bi bi-arrow-left me-1"></i> Back to List
+    </a>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-7">
+        <div class="card pia-card shadow-sm mb-4">
+            <div class="card-body p-4">
+                <h6 class="pia-form-section">Upload File</h6>
+
+                <form method="POST" enctype="multipart/form-data" id="importForm">
+                    <div id="dropZone" class="pia-dropzone text-center p-5 mb-3">
+                        <i class="bi bi-cloud-arrow-up fs-1 text-primary mb-2 d-block"></i>
+                        <p class="mb-2">Drag &amp; drop your <strong>.xlsx</strong> or <strong>.csv</strong> file here</p>
+                        <p class="text-muted small mb-3">or</p>
+                        <label for="importFile" class="btn pia-btn-primary mb-0">
+                            <i class="bi bi-upload me-1"></i> Choose File
+                        </label>
+                        <input type="file" name="import_file" id="importFile" accept=".xlsx,.csv" class="d-none" required>
+                        <p id="fileName" class="mt-3 mb-0 fw-semibold text-primary"></p>
+                    </div>
+
+                    <div id="progressWrap" class="mb-3 d-none">
+                        <div class="d-flex justify-content-between small text-muted mb-1">
+                            <span>Uploading and processing rows&hellip;</span>
+                        </div>
+                        <div class="progress" style="height: 8px;">
+                            <div class="progress-bar progress-bar-striped progress-bar-animated bg-primary" style="width: 100%"></div>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn pia-btn-primary w-100" id="submitBtn">
+                        <i class="bi bi-cloud-upload me-1"></i> Upload &amp; Import
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <div class="card pia-card shadow-sm">
+            <div class="card-body p-4">
+                <h6 class="pia-form-section">Need the Template?</h6>
+                <p class="text-muted small mb-3">
+                    Download the official template so your columns match exactly what the importer expects.
+                    Do not add Username or Password columns -- those are generated automatically
+                    (Username = Email, Password = CNIC).
+                </p>
+                <a href="{{ url_for('intern.import_template') }}" class="btn btn-outline-primary">
+                    <i class="bi bi-download me-1"></i> Download Template (.xlsx)
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-5">
+        <div class="card pia-card shadow-sm">
+            <div class="card-body p-4">
+                <h6 class="pia-form-section">Expected Columns (exact order)</h6>
+                <ul class="small text-muted mb-0 ps-3">
+                    <li>Full Name</li>
+                    <li>CNIC <span class="text-muted">(13 digits, e.g. 42101-1234567-1)</span></li>
+                    <li>Station <span class="text-muted">(must be a valid PIA station)</span></li>
+                    <li>Cell no</li>
+                    <li>Email</li>
+                    <li>Qualification</li>
+                    <li>Major</li>
+                    <li>University</li>
+                    <li>Department <span class="text-muted">(must match an existing department exactly)</span></li>
+                    <li>Division/Section <span class="text-muted">(must match an existing division/section under that department)</span></li>
+                    <li>Internship Start Date</li>
+                    <li>Internship End Date</li>
+                    <li>Documents Status <span class="text-muted">(Complete / Pending / In Progress)</span></li>
+                    <li>Certificate Status <span class="text-muted">(Pending / Generated / Issued)</span></li>
+                </ul>
+                <hr>
+                <p class="small text-muted mb-0">
+                    Extra columns and extra whitespace are ignored. Empty rows are skipped. Rows with
+                    missing/invalid data, an unknown station, an unknown Department/Division/Section, or a
+                    duplicate CNIC/Email are rejected with a clear reason -- the rest of the file still
+                    imports. Department and Division/Section must already exist (Admin &rarr; Departments) --
+                    free-text placements are no longer accepted. A User account is created automatically for
+                    every imported intern (Username = Email, Password = CNIC, Role = Intern, password
+                    hashed). No emails are sent for bulk imports.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if result %}
+<div class="card pia-card shadow-sm mt-4">
+    <div class="card-body p-4">
+        <h5 class="mb-3"><i class="bi bi-clipboard-check me-2"></i>Import Complete</h5>
+        <div class="row g-3 mb-4">
+            <div class="col-sm-4 col-lg-2">
+                <div class="p-3 rounded bg-light text-center">
+                    <div class="fs-3 fw-bold">{{ result.total }}</div>
+                    <div class="text-muted small">Total Rows</div>
+                </div>
+            </div>
+            <div class="col-sm-4 col-lg-2">
+                <div class="p-3 rounded bg-success bg-opacity-10 text-center">
+                    <div class="fs-3 fw-bold text-success">{{ result.success }}</div>
+                    <div class="text-muted small">Imported</div>
+                </div>
+            </div>
+            <div class="col-sm-4 col-lg-2">
+                <div class="p-3 rounded bg-warning bg-opacity-10 text-center">
+                    <div class="fs-3 fw-bold text-warning">{{ result.skipped }}</div>
+                    <div class="text-muted small">Skipped</div>
+                </div>
+            </div>
+            <div class="col-sm-4 col-lg-2">
+                <div class="p-3 rounded bg-danger bg-opacity-10 text-center">
+                    <div class="fs-3 fw-bold text-danger">{{ result.duplicate_cnic }}</div>
+                    <div class="text-muted small">Duplicate CNICs</div>
+                </div>
+            </div>
+            <div class="col-sm-4 col-lg-2">
+                <div class="p-3 rounded bg-danger bg-opacity-10 text-center">
+                    <div class="fs-3 fw-bold text-danger">{{ result.duplicate_email }}</div>
+                    <div class="text-muted small">Duplicate Emails</div>
+                </div>
+            </div>
+            <div class="col-sm-4 col-lg-2">
+                <div class="p-3 rounded bg-secondary bg-opacity-10 text-center">
+                    <div class="fs-3 fw-bold">{{ result.validation_errors }}</div>
+                    <div class="text-muted small">Validation Errors</div>
+                </div>
+            </div>
+        </div>
+
+        {% if result.errors %}
+        <div class="d-flex justify-content-between align-items-center">
+            <h6 class="pia-form-section mb-0">Error Report</h6>
+            <a href="{{ url_for('intern.import_error_report') }}" class="btn btn-sm btn-outline-danger">
+                <i class="bi bi-download me-1"></i> Download Error Report (.xlsx)
+            </a>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-sm table-striped align-middle">
+                <thead>
+                    <tr>
+                        <th style="width: 100px;">Row</th>
+                        <th>Reason</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row_number, message, category in result.errors %}
+                    <tr>
+                        <td>Row {{ row_number }}</td>
+                        <td>{{ message }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
+
+        <a href="{{ url_for('intern.list_interns') }}" class="btn pia-btn-primary mt-2">
+            <i class="bi bi-people me-1"></i> View Interns
+        </a>
+    </div>
+</div>
+{% endif %}
+
+<style>
+.pia-dropzone {
+    border: 2px dashed var(--pia-gold, #C9A24B);
+    border-radius: 12px;
+    background: #fafbfc;
+    transition: background .15s ease, border-color .15s ease;
+}
+.pia-dropzone.dragover {
+    background: #eef4fb;
+    border-color: var(--pia-navy, #012A54);
+}
+</style>
+
+<script>
+(function () {
+    const dropZone = document.getElementById('dropZone');
+    const fileInput = document.getElementById('importFile');
+    const fileName = document.getElementById('fileName');
+    const form = document.getElementById('importForm');
+    const submitBtn = document.getElementById('submitBtn');
+    const progressWrap = document.getElementById('progressWrap');
+
+    function showFileName() {
+        if (fileInput.files.length) {
+            fileName.textContent = fileInput.files[0].name;
+        }
+    }
+
+    fileInput.addEventListener('change', showFileName);
+
+    ['dragenter', 'dragover'].forEach(evt => {
+        dropZone.addEventListener(evt, (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            dropZone.classList.add('dragover');
+        });
+    });
+
+    ['dragleave', 'drop'].forEach(evt => {
+        dropZone.addEventListener(evt, (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            dropZone.classList.remove('dragover');
+        });
+    });
+
+    dropZone.addEventListener('drop', (e) => {
+        const files = e.dataTransfer.files;
+        if (files.length) {
+            fileInput.files = files;
+            showFileName();
+        }
+    });
+
+    form.addEventListener('submit', () => {
+        if (!fileInput.files.length) return;
+        progressWrap.classList.remove('d-none');
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Importing&hellip;';
+    });
+})();
+</script>
+{% endblock %}

@@ -1,0 +1,184 @@
+{% extends 'base.html' %}
+{% from 'components/dual_select.html' import dual_select %}
+{% from 'components/department_select.html' import department_select %}
+{% block title %}{{ 'Edit' if project else 'Create' }} Project - Intern Onboarding Portal{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h3 class="pia-page-title">
+        <i class="bi bi-kanban me-2"></i>{{ 'Edit' if project else 'Create' }} Project
+    </h3>
+    <a href="{{ url_for('project.list_projects') }}" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left me-1"></i> Back to List
+    </a>
+</div>
+
+{% set data = form if form else project %}
+{% set selected_ids = selected_intern_ids if selected_intern_ids is defined else [] %}
+<div class="card pia-card shadow-sm">
+    <div class="card-body p-4">
+        <form method="POST" novalidate>
+            <div class="row g-3">
+                <div class="col-12">
+                    <label class="form-label">Project Title <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" name="title" required
+                           value="{{ data.title if data else '' }}">
+                </div>
+                <div class="col-12">
+                    <label class="form-label">Description <span class="text-danger">*</span></label>
+                    <textarea class="form-control" name="description" rows="4" required
+                              >{{ data.description if data else '' }}</textarea>
+                    <div class="form-text">A description is required so interns and reviewers know what the project involves.</div>
+                </div>
+
+                {% if is_pm %}
+                <!-- PM tasks are auto-scoped to their own department & self as manager -->
+                <input type="hidden" name="department_id" value="{{ departments[0].id if departments else '' }}">
+                <input type="hidden" name="assigned_manager_id" value="{{ managers[0].id if managers else '' }}">
+                <div class="col-md-6">
+                    <label class="form-label">Department</label>
+                    <input type="text" class="form-control" value="{{ departments[0].name if departments else '' }}" disabled readonly>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Division/Section</label>
+                    <select class="form-select pia-searchable-select" name="sub_department_id" data-role="subdepartment-select" data-selected-id="{{ data.sub_department_id if data else '' }}" id="pmSubDeptSelect">
+                        <option value="">Select a division/section…</option>
+                        {% for sub in (departments[0].sub_departments if departments else []) %}
+                        <option value="{{ sub.id }}" {{ 'selected' if data and (data.sub_department_id|string) == (sub.id|string) }}>{{ sub.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Assigned Manager</label>
+                    <input type="text" class="form-control" value="{{ managers[0].full_name if managers else '' }}" disabled readonly>
+                </div>
+                <div class="col-12">
+                    <label class="form-label">Assigned Interns</label>
+                    {{ dual_select('assigned_intern_ids', interns, selected_ids, 'pmDualSelect') }}
+                </div>
+                {% else %}
+                <div class="col-12" data-cascade="project-assignment">
+                <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label">City <span class="text-danger">*</span></label>
+                    {% if is_city_scoped %}
+                    <input type="text" class="form-control" value="{{ hr_city }}" disabled readonly>
+                    <div class="form-text">You are assigned to this city, so Department, Project Manager and Intern options are already scoped to it.</div>
+                    {% else %}
+                    <select class="form-select" name="city_filter" data-role="city-select">
+                        <option value="">Select a city…</option>
+                        {% for c in pia_cities %}
+                        <option value="{{ c }}" {{ 'selected' if (data.city_filter if data and data.city_filter else selected_city) == c }}>{{ c }}</option>
+                        {% endfor %}
+                    </select>
+                    <div class="form-text">Choose a city first -- Department, Project Manager and Intern options below will be filtered to match.</div>
+                    {% endif %}
+                </div>
+                <div class="col-md-12">
+                    <div class="form-check mb-2">
+                        <input class="form-check-input" type="checkbox" id="useNewDepartment"
+                               onchange="document.getElementById('existingDeptBlock').classList.toggle('d-none', this.checked); document.getElementById('newDeptBlock').classList.toggle('d-none', !this.checked);"
+                               {{ 'checked' if data and data.new_department_name }}>
+                        <label class="form-check-label" for="useNewDepartment">
+                            This project's department/station isn't in the list -- add a new one
+                        </label>
+                    </div>
+                    <div id="existingDeptBlock" class="{{ 'd-none' if data and data.new_department_name }}">
+                        {{ department_select(
+                            widget_id='projectDept',
+                            departments=departments,
+                            selected_department_id=data.department_id if data else None,
+                            selected_sub_department_id=data.sub_department_id if data else None,
+                            department_required=false,
+                        ) }}
+                    </div>
+                    <div id="newDeptBlock" class="row g-2 {{ '' if data and data.new_department_name else 'd-none' }}">
+                        <div class="col-md-6">
+                            <label class="form-label small text-muted mb-1">New Department Name</label>
+                            <input type="text" class="form-control" name="new_department_name"
+                                   value="{{ data.new_department_name if data else '' }}"
+                                   placeholder="e.g. Digital Transformation">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small text-muted mb-1">Station / City</label>
+                            {% if is_city_scoped %}
+                            <input type="text" class="form-control" value="{{ hr_city }}" disabled readonly>
+                            <div class="form-text">New departments you add are automatically set to your assigned city.</div>
+                            {% else %}
+                            <select class="form-select" name="new_department_city">
+                                <option value="">Select a station…</option>
+                                {% for c in pia_cities %}
+                                <option value="{{ c }}" {{ 'selected' if data and data.new_department_city == c }}>{{ c }}</option>
+                                {% endfor %}
+                            </select>
+                            {% endif %}
+                        </div>
+                        <div class="form-text">
+                            Saved as a new Department; it becomes available in every Department dropdown afterward.
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Assigned Manager</label>
+                    <select class="form-select" name="assigned_manager_id" data-role="manager-select">
+                        <option value="">Unassigned</option>
+                        {% for mgr in managers %}
+                        <option value="{{ mgr.id }}" data-city="{{ mgr.city or '' }}" data-department-id="{{ mgr.department_id or '' }}"
+                            {{ 'selected' if project and project.assigned_manager_id == mgr.id }}>{{ pm_display(mgr) }}</option>
+                        {% endfor %}
+                    </select>
+                    <div class="form-text">Only Project Managers in the selected City/Department are shown.</div>
+                </div>
+                <div class="col-12">
+                    <label class="form-label">Assigned Interns</label>
+                    {{ dual_select('assigned_intern_ids', interns, selected_ids, 'hrDualSelect', empty_text='No interns available for the selected City/Department yet.') }}
+                    <div class="form-text">Select a City and Department above to see eligible interns. Interns are further narrowed to match the chosen Project Manager, if any.</div>
+                </div>
+                </div>
+                </div>
+                {% endif %}
+
+                <div class="col-md-4">
+                    <label class="form-label">Start Date <span class="text-danger">*</span></label>
+                    <input type="date" class="form-control" name="start_date" required
+                           value="{{ project.start_date if project else '' }}">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Deadline <span class="text-danger">*</span></label>
+                    <input type="date" class="form-control" name="deadline" required
+                           value="{{ project.deadline if project else '' }}">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Status</label>
+                    {% set rank = {'Pending': 0, 'Working': 1, 'Submitted': 2, 'Approved': 3, 'Rejected': 3, 'Completed': 4} %}
+                    {% set current_rank = rank.get(project.status, 0) if project else -1 %}
+                    <select class="form-select" name="status" {{ 'disabled' if project and project.status == 'Completed' }}>
+                        {% for s in (['Pending', 'Working', 'Submitted'] if is_pm else statuses) %}
+                        <option value="{{ s }}"
+                            {{ 'disabled' if project and rank.get(s, 0) < current_rank }}
+                            {{ 'selected' if (project and project.status == s) or (not project and s == 'Pending') }}>
+                            {{ s }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                    {% if project and project.status == 'Completed' %}
+                    <input type="hidden" name="status" value="Completed">
+                    <div class="form-text text-muted">This project is Completed and its status can no longer be changed.</div>
+                    {% elif project %}
+                    <div class="form-text text-muted">Status can only move forward (no going back to an earlier stage).</div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <button type="submit" class="btn pia-btn-primary mt-4">
+                <i class="bi bi-check-circle me-1"></i> {{ 'Update' if project else 'Save' }} Project
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{{ url_for('static', filename='js/dual-select.js') }}"></script>
+<script src="{{ url_for('static', filename='js/project-assignment-cascade.js') }}"></script>
+{% endblock %}

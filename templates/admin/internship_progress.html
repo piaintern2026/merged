@@ -1,0 +1,135 @@
+{% extends 'base.html' %}
+{% block title %}Internship Progress Tracking - Intern Onboarding Portal{% endblock %}
+
+{% block content %}
+<div class="pia-table-toolbar">
+    <div>
+        <h3 class="pia-page-title mb-1"><i class="bi bi-graph-up-arrow me-2"></i>Internship Progress Tracking</h3>
+        <p class="pia-page-subtitle mb-0">Live progress for every intern -- rotations, projects, attendance, evaluation and completion.</p>
+    </div>
+</div>
+
+<div class="card pia-card shadow-sm mb-3">
+    <div class="card-body">
+        <form method="GET" class="row g-2 align-items-end">
+            <div class="col-md-5">
+                <label class="form-label small mb-1">Search by name</label>
+                <input type="text" name="q" class="form-control form-control-sm" value="{{ search_text }}" placeholder="Intern name&hellip;">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label small mb-1">Department</label>
+                <select class="form-select form-select-sm" name="department_id">
+                    <option value="">All Departments</option>
+                    {% for d in departments %}
+                    <option value="{{ d.id }}" {{ 'selected' if department_id == d.id }}>{{ department_display(d) }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label small mb-1">Division/Section</label>
+                <select class="form-select form-select-sm" name="sub_department_id">
+                    <option value="">All Divisions/Sections</option>
+                    {% for s in sub_departments %}
+                    <option value="{{ s.id }}" {{ 'selected' if sub_department_id == s.id }}>{{ s.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2 d-flex gap-2">
+                <button type="submit" class="btn btn-sm pia-btn-primary w-100"><i class="bi bi-funnel me-1"></i>Filter</button>
+                <a href="{{ url_for('admin.internship_progress') }}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-x-lg"></i></a>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% if not rows %}
+<div class="card pia-card shadow-sm"><div class="card-body text-center text-muted py-5">
+    <i class="bi bi-inbox display-6 d-block mb-2"></i>No interns match this filter.
+</div></div>
+{% endif %}
+
+<div class="row g-3">
+    {% for row in rows %}
+    <div class="col-12">
+        <div class="card pia-card shadow-sm">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-3">
+                    <div>
+                        <h5 class="mb-1">
+                            <a href="{{ url_for('intern.view_intern', intern_id=row.intern.id) }}" class="text-decoration-none">{{ row.intern.full_name }}</a>
+                        </h5>
+                        <p class="text-muted small mb-0">
+                            Registered {{ row.registration_date | pkt('%d %b %Y') }} &bull;
+                            Current Dept: <strong>{{ row.current_department.name if row.current_department else '—' }}</strong>
+                            {% if row.previous_departments %}
+                            &bull; Previous: {{ row.previous_departments | join(', ') }}
+                            {% endif %}
+                        </p>
+                    </div>
+                    <div class="text-end">
+                        <span class="badge text-bg-light text-dark border">{{ row.days_remaining }} day(s) remaining</span>
+                        <a href="{{ url_for('rotation.timeline', intern_id=row.intern.id) }}" class="btn btn-sm btn-outline-secondary ms-1">
+                            <i class="bi bi-clock-history me-1"></i>Timeline
+                        </a>
+                    </div>
+                </div>
+
+                <div class="row g-3">
+                    <div class="col-md-6 col-lg-3">
+                        <div class="small text-muted mb-1">Internship Completion</div>
+                        <div class="progress" style="height: 8px;">
+                            <div class="progress-bar bg-primary" style="width: {{ row.completion_pct }}%"></div>
+                        </div>
+                        <div class="small mt-1">{{ row.completion_pct }}%</div>
+                    </div>
+                    <div class="col-md-6 col-lg-3">
+                        <div class="small text-muted mb-1">Attendance</div>
+                        <div class="progress" style="height: 8px;">
+                            <div class="progress-bar bg-success" style="width: {{ row.attendance_pct }}%"></div>
+                        </div>
+                        <div class="small mt-1">{{ row.attendance_pct }}%</div>
+                    </div>
+                    <div class="col-md-6 col-lg-3">
+                        <div class="small text-muted mb-1">Evaluation Score</div>
+                        {% if row.evaluation_pct is none %}
+                        <div class="progress" style="height: 8px;"><div class="progress-bar bg-secondary" style="width: 0%"></div></div>
+                        <div class="small mt-1 text-muted">Not yet evaluated</div>
+                        {% else %}
+                        <div class="progress" style="height: 8px;">
+                            <div class="progress-bar bg-warning" style="width: {{ row.evaluation_pct }}%"></div>
+                        </div>
+                        <div class="small mt-1">{{ row.evaluation_pct }}%</div>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-6 col-lg-3">
+                        <div class="small text-muted mb-1">Projects Completed</div>
+                        {% set proj_pct = ((row.completed_projects_count / row.total_projects_count) * 100) if row.total_projects_count else 0 %}
+                        <div class="progress" style="height: 8px;">
+                            <div class="progress-bar bg-info" style="width: {{ proj_pct }}%"></div>
+                        </div>
+                        <div class="small mt-1">{{ row.completed_projects_count }} / {{ row.total_projects_count }}</div>
+                    </div>
+                </div>
+
+                <div class="row g-2 mt-2 small text-muted">
+                    <div class="col-md-4">
+                        <i class="bi bi-kanban me-1"></i>Current Project:
+                        <strong class="text-body">{{ row.current_project.title if row.current_project else 'None assigned' }}</strong>
+                    </div>
+                    <div class="col-md-4">
+                        <i class="bi bi-arrow-repeat me-1"></i>Rotations Completed:
+                        <strong class="text-body">{{ row.rotations_count }}</strong>
+                    </div>
+                    <div class="col-md-4">
+                        <i class="bi bi-file-earmark-check me-1"></i>Final Report:
+                        <span class="badge {{ 'text-bg-success' if row.final_report_status == 'Submitted' else 'text-bg-secondary' }}">
+                            {{ row.final_report_status }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}
