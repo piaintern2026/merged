@@ -1,0 +1,368 @@
+{% extends 'base.html' %}
+{% block title %}Interns - Intern Onboarding Portal{% endblock %}
+
+{% block content %}
+<div class="pia-table-toolbar">
+    <div>
+        <h3 class="pia-page-title mb-1"><i class="bi bi-mortarboard me-2"></i>Interns</h3>
+        <p class="pia-page-subtitle mb-0">Manage intern profiles, placements, and internship timelines across the organization.</p>
+    </div>
+    <div class="pia-table-toolbar-actions">
+        <form method="GET" class="d-inline-block">
+            <select class="form-select form-select-sm w-auto" name="year" aria-label="Filter by year"
+                    onchange="this.form.submit()">
+                <option value="">All Years</option>
+                {% for y in available_years %}
+                <option value="{{ y }}" {{ 'selected' if selected_year == y }}>{{ y }}</option>
+                {% endfor %}
+            </select>
+        </form>
+        <div class="pia-table-search">
+            <i class="bi bi-search"></i>
+            <input type="text" class="form-control" data-table-search="internsTable"
+                   placeholder="Search by name or CNIC&hellip;" aria-label="Search interns">
+            <button type="button" class="pia-search-clear" aria-label="Clear search"><i class="bi bi-x-circle"></i></button>
+        </div>
+        <select class="form-select form-select-sm w-auto" data-table-filter="internsTable" data-filter-field="station"
+                aria-label="Filter by station">
+            <option value="">All Stations</option>
+            {% for s in stations %}
+            <option value="{{ s }}">{{ s }}</option>
+            {% endfor %}
+        </select>
+        <select class="form-select form-select-sm w-auto" data-table-filter="internsTable" data-filter-field="department"
+                aria-label="Filter by department">
+            <option value="">All Departments</option>
+            {% for d in departments %}
+            <option value="{{ d.name }}">{{ d.name }}</option>
+            {% endfor %}
+        </select>
+        <select class="form-select form-select-sm w-auto" data-table-filter="internsTable" data-filter-field="subdepartment"
+                aria-label="Filter by division/section">
+            <option value="">All Divisions/Sections</option>
+            {% set all_subs = [] %}
+            {% for d in departments %}
+            {% for sub in d.sub_departments %}
+            {% if all_subs.append(sub.name) %}{% endif %}
+            {% endfor %}
+            {% endfor %}
+            {% for name in all_subs|unique|sort %}
+            <option value="{{ name }}">{{ name }}</option>
+            {% endfor %}
+        </select>
+        <select class="form-select form-select-sm w-auto" data-table-filter="internsTable" data-filter-field="qualification"
+                aria-label="Filter by qualification">
+            <option value="">All Qualifications</option>
+            {% for q in qualifications %}
+            <option value="{{ q }}">{{ q }}</option>
+            {% endfor %}
+        </select>
+        <select class="form-select form-select-sm w-auto" data-table-filter="internsTable" data-filter-field="major"
+                aria-label="Filter by major">
+            <option value="">All Majors</option>
+            {% for m in majors %}
+            <option value="{{ m }}">{{ m }}</option>
+            {% endfor %}
+        </select>
+        <select class="form-select form-select-sm w-auto" data-table-filter="internsTable" data-filter-field="university"
+                aria-label="Filter by university">
+            <option value="">All Universities</option>
+            {% for u in universities %}
+            <option value="{{ u }}">{{ u }}</option>
+            {% endfor %}
+        </select>
+        <select class="form-select form-select-sm w-auto" data-table-filter="internsTable" data-filter-field="docstatus"
+                aria-label="Filter by documents status">
+            <option value="">All Document Statuses</option>
+            {% for s in documents_statuses %}
+            <option value="{{ s }}">{{ s }}</option>
+            {% endfor %}
+        </select>
+        <select class="form-select form-select-sm w-auto" data-table-filter="internsTable" data-filter-field="certstatus"
+                aria-label="Filter by certificate status">
+            <option value="">All Certificate Statuses</option>
+            {% for s in certificate_statuses %}
+            <option value="{{ s }}">{{ s }}</option>
+            {% endfor %}
+        </select>
+        <select class="form-select form-select-sm w-auto" data-table-filter="internsTable" data-filter-field="pm"
+                aria-label="Filter by project manager">
+            <option value="">All Project Managers</option>
+            {% for m in managers %}
+            <option value="{{ m.full_name }}">{{ pm_display(m) }}</option>
+            {% endfor %}
+        </select>
+        <select class="form-select form-select-sm w-auto" data-table-filter="internsTable" data-filter-field="status"
+                aria-label="Filter by internship status">
+            <option value="">All Statuses</option>
+            {% for s in statuses %}
+            <option value="{{ s }}">{{ s }}</option>
+            {% endfor %}
+        </select>
+        <a href="{{ url_for('intern.export_interns') }}" class="btn btn-outline-success text-nowrap">
+            <i class="bi bi-file-earmark-arrow-down me-1"></i> Export
+        </a>
+        {% if current_user.role == 'Admin' %}
+        <a href="{{ url_for('intern.import_interns') }}" class="btn btn-outline-primary text-nowrap">
+            <i class="bi bi-file-earmark-excel me-1"></i> Import Interns
+        </a>
+        <a href="{{ url_for('intern.add_intern') }}" class="btn pia-btn-primary text-nowrap">
+            <i class="bi bi-plus-circle me-1"></i> Add Intern
+        </a>
+        {% endif %}
+    </div>
+</div>
+
+<div class="card pia-card shadow-sm">
+    <div class="pia-table-heading px-3 pt-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <h4 class="mb-0"><i class="bi bi-mortarboard me-2"></i>Intern List</h4>
+        {% if current_user.role == 'Admin' %}
+        <div class="d-flex align-items-center gap-2">
+            <span class="small text-muted" id="internsSelectedCount">0 selected</span>
+            <button type="button" class="btn btn-sm btn-outline-warning" id="bulkDisableBtn" disabled
+                    data-bs-toggle="modal" data-bs-target="#bulkStatusConfirmModal" data-bulk-action="disable">
+                <i class="bi bi-toggle-off me-1"></i>Disable Selected
+            </button>
+            <button type="button" class="btn btn-sm btn-outline-success" id="bulkEnableBtn" disabled
+                    data-bs-toggle="modal" data-bs-target="#bulkStatusConfirmModal" data-bulk-action="enable">
+                <i class="bi bi-toggle2-on me-1"></i>Enable Selected
+            </button>
+        </div>
+        {% endif %}
+    </div>
+    <div class="table-responsive pia-table-wrap">
+        <table class="table pia-table align-middle mb-0" id="internsTable" data-page-size="10">
+            <thead>
+                <tr>
+                    {% if current_user.role == 'Admin' %}
+                    <th style="width: 2.5rem;">
+                        <input type="checkbox" class="form-check-input" id="internsSelectAll" aria-label="Select all interns">
+                    </th>
+                    {% endif %}
+                    <th>Photo</th>
+                    <th>Full Name</th>
+                    <th>CNIC</th>
+                    <th>Station</th>
+                    <th>Department</th>
+                    <th>Division/Section</th>
+                    <th>Qualification</th>
+                    <th>University</th>
+                    <th>Start Date</th>
+                    <th>End Date</th>
+                    <th>Documents</th>
+                    <th>Certificate</th>
+                    <th>Status</th>
+                    <th class="text-end">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for intern in interns %}
+                <tr data-search="{{ (intern.full_name ~ ' ' ~ intern.cnic ~ ' ' ~ intern.station ~ ' ' ~ intern.university) | lower }}"
+                    data-station="{{ intern.station }}"
+                    data-department="{{ intern.department.name if intern.department else '' }}"
+                    data-subdepartment="{{ intern.sub_department.name if intern.sub_department else '' }}"
+                    data-qualification="{{ intern.qualification }}"
+                    data-major="{{ intern.major or '' }}"
+                    data-university="{{ intern.university }}"
+                    data-docstatus="{{ intern.documents_status }}"
+                    data-certstatus="{{ intern.certificate_status }}"
+                    data-pm="{{ intern.current_manager.full_name if intern.current_manager else '' }}"
+                    data-status="{{ intern.effective_status }}">
+                    {% if current_user.role == 'Admin' %}
+                    <td>
+                        <input type="checkbox" class="form-check-input intern-row-checkbox"
+                               value="{{ intern.id }}" aria-label="Select {{ intern.full_name }}">
+                    </td>
+                    {% endif %}
+                    <td>
+                        {% if intern.user.profile_picture %}
+                        <img src="{{ url_for('static', filename='uploads/profile_pics/' ~ intern.user.profile_picture) }}"
+                             class="pia-avatar" alt="{{ intern.full_name }}">
+                        {% else %}
+                        <span class="pia-avatar pia-avatar-placeholder">{{ intern.full_name[0]|upper }}</span>
+                        {% endif %}
+                    </td>
+                    <td class="fw-semibold">{{ intern.full_name }}</td>
+                    <td>{{ intern.cnic }}</td>
+                    <td>{{ intern.station }}</td>
+                    <td>{{ intern.department.name if intern.department else '-' }}</td>
+                    <td>{{ intern.sub_department.name if intern.sub_department else '-' }}</td>
+                    <td>{{ intern.qualification }}{% if intern.major %} &bull; {{ intern.major }}{% endif %}</td>
+                    <td>{{ intern.university }}</td>
+                    <td>{{ intern.internship_start_date.strftime('%d %b %Y') }}</td>
+                    <td>{{ intern.internship_end_date.strftime('%d %b %Y') }}</td>
+                    <td><span class="badge {{ 'text-bg-success' if intern.documents_status == 'Complete' else ('text-bg-warning' if intern.documents_status == 'In Progress' else 'text-bg-secondary') }}">{{ intern.documents_status }}</span></td>
+                    <td><span class="badge {{ 'text-bg-success' if intern.certificate_status == 'Issued' else ('text-bg-info' if intern.certificate_status == 'Generated' else 'text-bg-secondary') }}">{{ intern.certificate_status }}</span></td>
+                    <td>
+                        {% set st = intern.effective_status %}
+                        <span class="badge {{ 'text-bg-success' if st == 'Active' else ('text-bg-secondary' if st == 'Completed' else 'text-bg-danger') }}">{{ st }}</span>
+                    </td>
+                    <td class="text-end text-nowrap">
+                        <a href="{{ url_for('intern.view_intern', intern_id=intern.id) }}"
+                           class="btn btn-sm btn-outline-secondary" title="View">
+                            <i class="bi bi-eye"></i>
+                        </a>
+                        {% if current_user.role == 'Admin' %}
+                        <a href="{{ url_for('intern.edit_intern', intern_id=intern.id) }}"
+                           class="btn btn-sm btn-outline-primary" title="Edit">
+                            <i class="bi bi-pencil-square"></i>
+                        </a>
+                        {% endif %}
+                        <a href="{{ url_for('rotation.rotate_intern', intern_id=intern.id) }}"
+                           class="btn btn-sm btn-outline-secondary" title="Rotate Intern">
+                            <i class="bi bi-arrow-left-right"></i>
+                        </a>
+                        {% if current_user.role == 'Admin' %}
+                        <form method="POST" action="{{ url_for('intern.toggle_intern_status', intern_id=intern.id) }}"
+                              class="d-inline">
+                            <button type="submit" class="btn btn-sm btn-outline-warning"
+                                    title="{{ 'Disable' if intern.user.is_active_account else 'Enable' }}">
+                                <i class="bi {{ 'bi-toggle-off' if intern.user.is_active_account else 'bi-toggle2-on' }}"></i>
+                            </button>
+                        </form>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% else %}
+                <tr><td colspan="{{ 14 if current_user.role == 'Admin' else 13 }}" class="text-center text-muted py-4">No interns registered yet.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% if interns %}
+    <div class="pia-table-empty text-center d-none" data-empty-for="internsTable">
+        <i class="bi bi-search display-6 d-block mb-2"></i>
+        No interns match your search.
+    </div>
+    <div class="card-body pt-0" data-pagination-for="internsTable"></div>
+    {% endif %}
+</div>
+
+{% if current_user.role == 'Admin' %}
+<!-- Bulk disable/enable form -->
+<form method="POST" action="{{ url_for('intern.bulk_toggle_intern_status') }}" id="bulkStatusForm" class="d-none">
+    <input type="hidden" name="action" id="bulkStatusAction" value="">
+    <div id="bulkStatusInternIds"></div>
+</form>
+
+<!-- Confirmation modal -->
+<div class="modal fade" id="bulkStatusConfirmModal" tabindex="-1" aria-labelledby="bulkStatusConfirmModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="bulkStatusConfirmModalLabel">Confirm Bulk Action</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p class="mb-0" id="bulkStatusConfirmMessage">Are you sure you want to proceed?</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn pia-btn-primary" id="bulkStatusConfirmBtn">Confirm</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_scripts %}
+{% if current_user.role == 'Admin' %}
+<script>
+(function () {
+    const selectAll = document.getElementById('internsSelectAll');
+    const table = document.getElementById('internsTable');
+    const countEl = document.getElementById('internsSelectedCount');
+    const disableBtn = document.getElementById('bulkDisableBtn');
+    const enableBtn = document.getElementById('bulkEnableBtn');
+    const confirmModalEl = document.getElementById('bulkStatusConfirmModal');
+    const confirmMsg = document.getElementById('bulkStatusConfirmMessage');
+    const confirmBtn = document.getElementById('bulkStatusConfirmBtn');
+    const bulkForm = document.getElementById('bulkStatusForm');
+    const bulkAction = document.getElementById('bulkStatusAction');
+    const bulkInternIdsWrap = document.getElementById('bulkStatusInternIds');
+
+    if (!table) { return; }
+
+    function rowCheckboxes() {
+        return Array.from(table.querySelectorAll('.intern-row-checkbox'));
+    }
+
+    function selectedIds() {
+        return rowCheckboxes().filter((cb) => cb.checked).map((cb) => cb.value);
+    }
+
+    function refreshState() {
+        const boxes = rowCheckboxes();
+        const visible = boxes.filter((cb) => cb.closest('tr').style.display !== 'none');
+        const checked = visible.filter((cb) => cb.checked);
+
+        countEl.textContent = checked.length + ' selected';
+        disableBtn.disabled = checked.length === 0;
+        enableBtn.disabled = checked.length === 0;
+
+        if (selectAll) {
+            selectAll.checked = visible.length > 0 && checked.length === visible.length;
+            selectAll.indeterminate = checked.length > 0 && checked.length < visible.length;
+        }
+    }
+
+    if (selectAll) {
+        selectAll.addEventListener('change', function () {
+            rowCheckboxes().forEach((cb) => {
+                if (cb.closest('tr').style.display !== 'none') {
+                    cb.checked = selectAll.checked;
+                }
+            });
+            refreshState();
+        });
+    }
+
+    table.addEventListener('change', function (e) {
+        if (e.target.classList.contains('intern-row-checkbox')) {
+            refreshState();
+        }
+    });
+
+    // Re-check selection state whenever the table is filtered/paginated.
+    const observer = new MutationObserver(refreshState);
+    observer.observe(table, { attributes: true, attributeFilter: ['style'], subtree: true });
+
+    [disableBtn, enableBtn].forEach((btn) => {
+        btn.addEventListener('click', function () {
+            const ids = selectedIds();
+            if (ids.length === 0) {
+                confirmModalEl.classList.remove('show');
+                return;
+            }
+            const action = btn.getAttribute('data-bulk-action');
+            confirmMsg.textContent = 'You are about to ' + action + ' ' + ids.length +
+                ' intern(s). This will ' + (action === 'disable' ? 'prevent them from logging in.' : 'restore their login access.') +
+                ' Do you want to continue?';
+            confirmBtn.setAttribute('data-pending-action', action);
+        });
+    });
+
+    confirmBtn.addEventListener('click', function () {
+        const ids = selectedIds();
+        const action = confirmBtn.getAttribute('data-pending-action');
+        if (ids.length === 0 || !action) { return; }
+
+        bulkAction.value = action;
+        bulkInternIdsWrap.innerHTML = '';
+        ids.forEach((id) => {
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'intern_ids';
+            input.value = id;
+            bulkInternIdsWrap.appendChild(input);
+        });
+
+        bulkForm.submit();
+    });
+
+    refreshState();
+})();
+</script>
+{% endif %}
+{% endblock %}

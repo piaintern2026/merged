@@ -1,0 +1,19 @@
+{% extends "emails/base_email.html" %}
+{% block title %}Test Email{% endblock %}
+{% block preheader %}This is a test email from the Intern Onboarding Portal.{% endblock %}
+
+{% block body %}
+<h2 style="margin:0 0 16px 0; font-family:'Segoe UI',Arial,sans-serif; color:#01411C; font-size:20px;">
+    ✅ SMTP Configuration Working
+</h2>
+
+<p style="margin:0 0 16px 0; font-family:'Segoe UI',Arial,sans-serif; font-size:14px; color:#1E1E1E; line-height:1.6;">
+    This is a test email sent to <strong>{{ recipient }}</strong> from the Intern Onboarding Portal's
+    Email Settings page on {{ sent_at }}.
+</p>
+
+<p style="margin:0; font-family:'Segoe UI',Arial,sans-serif; font-size:13px; color:#5E6A61; line-height:1.6;">
+    If you received this, your SMTP settings are configured correctly and the application can
+    send outbound notification emails.
+</p>
+{% endblock %}

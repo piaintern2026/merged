@@ -1,0 +1,502 @@
+{% extends 'base.html' %}
+{% block title %}Login - Future Talent Onboarding Portal{% endblock %}
+
+{% block extra_head %}
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+    html, body.auth-body {
+        background: #f3f4f6;
+        font-family: 'Inter', -apple-system, 'Segoe UI', sans-serif;
+    }
+
+    /* Global flash messages become a floating toast so they don't push
+       the hero layout around -- pure CSS positioning, no markup/JS
+       change to the shared flash.html component. */
+    body.auth-body .flash-container {
+        position: fixed;
+        top: 1rem;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 1000;
+        width: min(92%, 420px);
+        margin: 0;
+    }
+    body.auth-body .flash-container .alert {
+        font-size: 0.85rem;
+        box-shadow: 0 10px 25px -8px rgba(0,0,0,0.25);
+    }
+
+    .ftop-wrapper {
+        min-height: 100vh;
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #f3f4f6;
+        padding: 2rem 1rem;
+        box-sizing: border-box;
+    }
+
+    /* Hero container -- matches the FTOP artwork's native aspect ratio
+       exactly (1399 x 1124) so background-size:contain never letterboxes
+       against a mismatched box, and the overlay card can be positioned
+       with simple percentages that always line up with the artwork. */
+    .ftop-card {
+        position: relative;
+        width: 113%;
+        max-width: 830px;
+        max-height: 98vh;
+        aspect-ratio: 1397 / 1122;
+        margin: 0 auto;
+        border-radius: 22px;
+        overflow: hidden;
+        background-color: #f3f4f6;
+        background-image: url("{{ url_for('static', filename='images/ftop-hero.png') }}");
+        background-repeat: no-repeat;
+        background-position: center;
+        background-size: contain;
+        box-shadow: 0 24px 55px -18px rgba(11, 93, 70, 0.28), 0 0 0 1px rgba(11,93,70,0.05);
+    }
+
+    /* ============ Glassmorphism login card ============
+       Positioned over the gray placeholder area of the artwork using
+       percentages calibrated to the hero image so it never overlaps the
+       logo, heading, plane, or feature strip. */
+    .ftop-login-card {
+        position: absolute;
+        top: 27%;
+        left: 2%;
+        width: 39%;
+        height: 52%;
+        z-index: 2;
+        display: flex;
+
+        flex-direction: column;
+        background: rgba(255, 255, 255, 0.90);
+        backdrop-filter: blur(14px) saturate(1.4);
+        -webkit-backdrop-filter: blur(14px) saturate(1.4);
+        border: 1px solid rgba(255, 255, 255, 0.6);
+        border-radius: 22px;
+        box-shadow:
+            0 18px 40px -14px rgba(11, 93, 70, 0.30),
+            0 2px 8px rgba(11, 93, 70, 0.08),
+            inset 0 1px 0 rgba(255,255,255,0.8);
+        padding: 0.9rem 1rem 0.8rem;
+        overflow-y: auto;
+        transition: box-shadow 0.3s ease, transform 0.3s ease;
+    }
+    .ftop-login-card::-webkit-scrollbar { width: 4px; }
+    .ftop-login-card::-webkit-scrollbar-thumb { background: rgba(11,93,70,0.25); border-radius: 4px; }
+
+    .ftop-form-accent {
+        width: 30px;
+        height: 3px;
+        border-radius: 4px;
+        background: linear-gradient(90deg, #0B5D46, #c7a542);
+        margin-bottom: 1.14rem;
+    }
+
+    .ftop-form-title {
+        font-family: 'Poppins', sans-serif;
+        font-weight: 700;
+        font-size: 0.88rem;
+        color: #17231b;
+        margin: 0 0 0.05rem;
+        letter-spacing: 0.01em;
+    }
+    .ftop-form-title span { color: #0B5D46; }
+
+    .ftop-form-subtitle {
+        font-size: 0.82rem;
+        color: #74807a;
+        margin: 0 0 0.45rem;
+    }
+
+    .ftop-field { margin-bottom: 0.4rem; }
+    .ftop-field label {
+        display: block;
+        font-size: 16px;
+        font-weight: 600;
+        color: #33453a;
+        margin-bottom: 0.22rem;
+        letter-spacing: 0.01em;
+    }
+    .ftop-field label.ftop-label-lg {
+        font-size: 16px;
+    }
+    label[for="captcha_answer"] {
+        font-size: 0.88rem;
+    }
+    .ftop-field input,
+    .ftop-field select,
+    .ftop-field .ftop-input-group {
+        width: 100%;
+        border: 1px solid #d9deda;
+        border-radius: 7px;
+        background: rgba(255,255,255,0.9);
+        font-size: 0.85rem;
+        color: #1c2b21;
+        box-sizing: border-box;
+    }
+    .ftop-field input,
+    .ftop-field select {
+        padding: 0.26rem 0.4rem 0.26rem 1.3rem;
+        outline: none;
+        appearance: none;
+        -webkit-appearance: none;
+        transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.15s ease;
+    }
+    .ftop-field select {
+        padding-right: 1.3rem;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath fill='%2393a49b' d='M4.5 6l3.5 3.5L11.5 6z'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 0.4rem center;
+        background-size: 0.6rem;
+        cursor: pointer;
+    }
+    .ftop-field input::placeholder { color: #a9b2ac; }
+    .ftop-field input:focus,
+    .ftop-field select:focus {
+        border-color: #0B5D46;
+        box-shadow: 0 0 0 3px rgba(11,93,70,0.15);
+        transform: translateY(-1px);
+    }
+
+    .ftop-input-icon-wrap { position: relative; }
+    .ftop-input-icon {
+        position: absolute;
+        left: 0.42rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #93a49b;
+        font-size: 0.55rem;
+        pointer-events: none;
+        z-index: 1;
+        transition: color 0.2s ease;
+    }
+    .ftop-field input:focus ~ .ftop-input-icon,
+    .ftop-input-icon-wrap:focus-within .ftop-input-icon {
+        color: #0B5D46;
+    }
+
+    .ftop-input-group {
+        display: flex;
+        align-items: center;
+        padding-right: 0.2rem;
+    }
+    .ftop-input-group input {
+        flex: 1;
+        border: none;
+        box-shadow: none !important;
+        background: transparent;
+        transform: none !important;
+    }
+    .ftop-toggle-btn {
+        background: transparent;
+        border: none;
+        color: #93a49b;
+        padding: 0 0.15rem;
+        cursor: pointer;
+        font-size: 0.6rem;
+        transition: color 0.2s ease, transform 0.2s ease;
+    }
+    .ftop-toggle-btn:hover { color: #0B5D46; transform: scale(1.12); }
+
+    .ftop-row-between {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin: 0.15rem 0 0.4rem;
+    }
+    .ftop-remember {
+        display: flex;
+        align-items: center;
+        gap: 0.28rem;
+        font-size: 0.88rem;
+        color: #33453a;
+        cursor: pointer;
+        user-select: none;
+    }
+    .ftop-remember input[type="checkbox"] {
+        width: 0.7rem;
+        height: 0.7rem;
+        accent-color: #0B5D46;
+        cursor: pointer;
+        margin: 0;
+    }
+
+    .ftop-forgot-link {
+        font-size: 0.78rem;
+        color: #8a6d1f;
+        text-decoration: none;
+        font-weight: 600;
+        transition: color 0.2s ease;
+        white-space: nowrap;
+    }
+    .ftop-forgot-link:hover { color: #0B5D46; text-decoration: underline; }
+
+    .ftop-captcha-row {
+        display: flex;
+        align-items: center;
+        gap: 0.35rem;
+    }
+    .ftop-captcha-row input { padding-left: 0.45rem; }
+    .ftop-captcha-badge {
+        flex-shrink: 0;
+        background: #eef3f0;
+        color: #0B5D46;
+        border-radius: 7px;
+        padding: 0.34rem 0.55rem;
+        font-size: 0.9rem;
+        font-weight: 700;
+        font-family: 'Poppins', sans-serif;
+        white-space: nowrap;
+    }
+
+    .ftop-btn {
+        width: 100%;
+        position: relative;
+        background: linear-gradient(135deg, #0B5D46 0%, #14895f 55%, #0d6e53 100%);
+        background-size: 160% 160%;
+        background-position: 0% 50%;
+        color: #fff;
+        border: none;
+        border-radius: 8px;
+        padding: 0.36rem 1rem;
+        font-size: 0.99rem;
+        font-weight: 600;
+        font-family: 'Poppins', sans-serif;
+        letter-spacing: 0.095em;
+        cursor: pointer;
+        margin-top: 0.15rem;
+        box-shadow: 0 8px 18px -6px rgba(11,93,70,0.5);
+        transition: background-position 0.4s ease, transform 0.15s ease, box-shadow 0.15s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.35rem;
+    }
+    .ftop-btn:hover {
+        background-position: 100% 50%;
+        transform: translateY(-1.5px);
+        box-shadow: 0 10px 22px -6px rgba(11,93,70,0.6);
+    }
+    .ftop-btn:active { transform: translateY(0); }
+    .ftop-btn:disabled { cursor: not-allowed; opacity: 0.85; transform: none; }
+
+    .ftop-spinner {
+        width: 0.65rem;
+        height: 0.65rem;
+        border: 2px solid rgba(255,255,255,0.4);
+        border-top-color: #fff;
+        border-radius: 50%;
+        display: none;
+        animation: ftop-spin 0.7s linear infinite;
+    }
+    .ftop-btn.is-loading .ftop-spinner { display: inline-block; }
+    .ftop-btn.is-loading .ftop-btn-label { opacity: 0.85; }
+    @keyframes ftop-spin { to { transform: rotate(360deg); } }
+
+    /* Inline message area inside the card, used for client-side
+       validation feedback -- separate from, and in addition to, the
+       server-rendered flash toast above. */
+    .ftop-inline-msg {
+        display: none;
+        align-items: center;
+        gap: 0.3rem;
+        font-size: 0.46rem;
+        font-weight: 600;
+        border-radius: 7px;
+        padding: 0.28rem 0.45rem;
+        margin-top: 0.35rem;
+    }
+    .ftop-inline-msg.is-error {
+        display: flex;
+        background: rgba(198,40,40,0.08);
+        color: #b32424;
+        border: 1px solid rgba(198,40,40,0.22);
+    }
+    .ftop-inline-msg.is-success {
+        display: flex;
+        background: rgba(46,125,50,0.1);
+        color: #1e5522;
+        border: 1px solid rgba(46,125,50,0.25);
+    }
+
+    .ftop-login-card {
+        animation: ftop-card-in 0.55s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    @keyframes ftop-card-in {
+        from { opacity: 0; transform: translateY(10px) scale(0.98); }
+        to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    /* ============ Responsive ============ */
+    @media (max-width: 900px) {
+        .ftop-login-card {
+            top: 39%;
+            left: 5%;
+            width: 34%;
+            padding: 0.7rem 0.7rem 0.6rem;
+            border-radius: 16px;
+        }
+        .ftop-form-title { font-size: 0.78rem; }
+        .ftop-form-subtitle { font-size: 0.68rem; margin-bottom: 0.32rem; }
+        .ftop-field { margin-bottom: 0.3rem; }
+        .ftop-field label { font-size: 0.72rem; }
+        .ftop-field input, .ftop-field select { padding: 0.24rem 0.35rem 0.24rem 1.1rem; font-size: 0.72rem; border-radius: 5px; }
+        .ftop-input-icon { left: 0.3rem; font-size: 0.6rem; }
+        .ftop-remember, .ftop-forgot-link { font-size: 0.65rem; }
+        .ftop-captcha-badge { font-size: 0.75rem; padding: 0.26rem 0.4rem; }
+        .ftop-btn { font-size: 0.7rem; padding: 0.3rem 0.55rem; }
+    }
+
+    @media (max-width: 620px) {
+        .ftop-wrapper { padding: 1.25rem 0.6rem; align-items: flex-start; }
+        .ftop-card {
+            max-height: none;
+            border-radius: 16px;
+        }
+        .ftop-login-card {
+            top: 38%;
+            left: 3.5%;
+            width: 40%;
+            height: 42%;
+            padding: 0.5rem 0.55rem 0.5rem;
+            border-radius: 12px;
+        }
+        .ftop-form-accent { width: 20px; height: 2px; margin-bottom: 0.2rem; }
+        .ftop-form-title { font-size: 0.68rem; }
+        .ftop-form-subtitle { font-size: 0.58rem; margin-bottom: 0.24rem; }
+        .ftop-field { margin-bottom: 0.22rem; }
+        .ftop-field label { font-size: 0.62rem; margin-bottom: 0.1rem; }
+        .ftop-field input, .ftop-field select { padding: 0.18rem 0.26rem 0.18rem 0.95rem; font-size: 0.62rem; border-radius: 4px; }
+        .ftop-input-icon { left: 0.22rem; font-size: 0.56rem; }
+        .ftop-row-between { margin: 0.1rem 0 0.28rem; }
+        .ftop-remember { font-size: 0.58rem; gap: 0.18rem; }
+        .ftop-remember input[type="checkbox"] { width: 0.6rem; height: 0.6rem; }
+        .ftop-forgot-link { font-size: 0.58rem; }
+        .ftop-captcha-badge { font-size: 0.65rem; padding: 0.18rem 0.3rem; border-radius: 4px; }
+        .ftop-btn { font-size: 0.6rem; padding: 0.24rem 0.45rem; border-radius: 5px; }
+        .ftop-spinner { width: 0.5rem; height: 0.5rem; }
+        .ftop-inline-msg { font-size: 0.55rem; padding: 0.22rem 0.32rem; }
+    }
+
+    @media (max-width: 420px) {
+        .ftop-login-card { left: 3%; width: 44%; top: 37%; height: 44%; }
+    }
+</style>
+{% endblock %}
+
+{% block auth_content %}
+<div class="ftop-wrapper">
+    <div class="ftop-card" role="img" aria-label="Pakistan International Airlines - FTOP Future Talent Onboarding Portal">
+
+        <div class="ftop-login-card">
+            <div class="ftop-form-accent"></div>
+            <h5 class="ftop-form-title"><span>FTOP</span> Login</h5>
+            <p class="ftop-form-subtitle">Enter your credentials to continue</p>
+
+            <form method="POST" action="{{ url_for('auth.login') }}" novalidate id="ftopLoginForm">
+                <div class="ftop-field">
+                    <label for="email" class="ftop-label-lg">Email / Username</label>
+                    <div class="ftop-input-icon-wrap">
+                        <i class="bi bi-person-fill ftop-input-icon"></i>
+                        <input type="email" id="email" name="email" placeholder="name@company.com" required autofocus>
+                    </div>
+                </div>
+
+                <div class="ftop-field">
+                    <label for="password" class="ftop-label-lg">Password</label>
+                    <div class="ftop-input-icon-wrap">
+                        <i class="bi bi-lock-fill ftop-input-icon"></i>
+                        <div class="ftop-input-group">
+                            <input type="password" id="password" name="password" placeholder="Enter your password" required>
+                            <button class="ftop-toggle-btn" type="button" id="togglePassword" tabindex="-1" aria-label="Show or hide password">
+                                <i class="bi bi-eye-fill"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="ftop-field">
+                    <label for="captcha_answer">Security check</label>
+                    <div class="ftop-captcha-row">
+                        <span class="ftop-captcha-badge">{{ captcha_question }} =</span>
+                        <input type="text" inputmode="numeric" autocomplete="off"
+                               id="captcha_answer" name="captcha_answer"
+                               placeholder="Answer" required>
+                    </div>
+                </div>
+
+                <div class="ftop-row-between">
+                    <label class="ftop-remember">
+                        <input type="checkbox" id="remember" name="remember">
+                        Remember Me
+                    </label>
+                    <a href="{{ url_for('auth.forgot_password') }}" class="ftop-forgot-link">Forgot Password?</a>
+                </div>
+
+                <button type="submit" class="ftop-btn" id="ftopSubmitBtn">
+                    <span class="ftop-spinner" aria-hidden="true"></span>
+                    <span class="ftop-btn-label">Sign In</span>
+                </button>
+
+                <div class="ftop-inline-msg" id="ftopInlineMsg" role="alert"></div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const toggleBtn = document.getElementById('togglePassword');
+    const pwdInput = document.getElementById('password');
+    if (toggleBtn && pwdInput) {
+        toggleBtn.addEventListener('click', function () {
+            const isHidden = pwdInput.type === 'password';
+            pwdInput.type = isHidden ? 'text' : 'password';
+            const icon = toggleBtn.querySelector('i');
+            if (icon) {
+                icon.classList.toggle('bi-eye-fill', !isHidden);
+                icon.classList.toggle('bi-eye-slash-fill', isHidden);
+            }
+        });
+    }
+
+    // Loading state + lightweight client-side validation feedback.
+    // Purely cosmetic: the form still submits normally to the existing
+    // auth.login endpoint with the same fields/behavior as before.
+    const form = document.getElementById('ftopLoginForm');
+    const submitBtn = document.getElementById('ftopSubmitBtn');
+    const inlineMsg = document.getElementById('ftopInlineMsg');
+
+    function showInlineMsg(text, type) {
+        if (!inlineMsg) return;
+        inlineMsg.textContent = text;
+        inlineMsg.className = 'ftop-inline-msg ' + (type === 'success' ? 'is-success' : 'is-error');
+    }
+
+    if (form && submitBtn) {
+        form.addEventListener('submit', function (e) {
+            const email = document.getElementById('email');
+            const password = document.getElementById('password');
+            const captcha = document.getElementById('captcha_answer');
+
+            if (!email.value || !password.value || !captcha.value) {
+                e.preventDefault();
+                showInlineMsg('Please fill in all required fields.', 'error');
+                return;
+            }
+
+            showInlineMsg('Signing you in…', 'success');
+            submitBtn.classList.add('is-loading');
+            submitBtn.disabled = true;
+            submitBtn.querySelector('.ftop-btn-label').textContent = 'Signing In…';
+            // Form submits normally (no preventDefault) -- backend logic untouched.
+        });
+    }
+});
+</script>
+{% endblock %}

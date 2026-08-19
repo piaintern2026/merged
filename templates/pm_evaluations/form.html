@@ -1,0 +1,230 @@
+{% extends 'base.html' %}
+{% block title %}{{ 'Edit' if evaluation else 'New' }} PM Evaluation Form - Intern Onboarding Portal{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h3 class="pia-page-title">
+        <i class="bi bi-clipboard-check me-2"></i>
+        Internship Learning &amp; Performance Evaluation Form (6 Weeks)
+    </h3>
+    <a href="{{ url_for('pm_evaluation.list_evaluations') }}" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left me-1"></i> Back to List
+    </a>
+</div>
+
+{% if not assignment_pairs %}
+<div class="alert alert-warning">
+    <i class="bi bi-exclamation-circle me-1"></i>
+    You don't have any interns assigned to your projects yet, so there is no one to evaluate.
+</div>
+{% else %}
+<div class="row justify-content-center">
+    <div class="col-lg-10">
+        <div class="card pia-card shadow-sm">
+            <div class="card-body p-4">
+                <form method="POST" novalidate id="pmEvaluationForm">
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-6">
+                            <label class="form-label">Intern / Project <span class="text-danger">*</span></label>
+                            {% if evaluation %}
+                            <input type="text" class="form-control" disabled
+                                   value="{{ evaluation.intern.full_name }} &mdash; {{ evaluation.project.title }}">
+                            {% else %}
+                            <select class="form-select" name="project_id" required>
+                                <option value="" disabled selected>Select an intern to evaluate</option>
+                                {% for p, i in assignment_pairs %}
+                                <option value="{{ p.id }}:{{ i.id }}" data-start="{{ i.internship_start_date.isoformat() if i.internship_start_date else '' }}"
+                                        {{ 'selected' if form and form.get('project_id') == (p.id|string ~ ':' ~ i.id|string) }}>
+                                    {{ i.full_name }} &mdash; {{ p.title }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Evaluation Date <span class="text-danger">*</span></label>
+                            <input type="date" class="form-control" name="evaluation_date"
+                                   value="{{ (form.get('evaluation_date') if form else None) or (evaluation.evaluation_date.isoformat() if evaluation else today) }}" required>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Status</label>
+                            <input type="text" class="form-control" disabled
+                                   value="{{ 'Finalized (locked)' if evaluation and evaluation.is_finalized else 'Draft' }}">
+                        </div>
+                    </div>
+
+                    <div class="alert alert-light border small mb-4">
+                        <strong>Evaluation Score Scale:</strong>
+                        {% for n, label in score_scale %}
+                        <span class="badge text-bg-light border me-1">{{ n }} &mdash; {{ label }}</span>
+                        {% endfor %}
+                    </div>
+
+                    <h6 class="pia-form-section">Weekly Activities &amp; Supervisor Evaluation</h6>
+                    <div class="table-responsive mb-4">
+                        <table class="table table-bordered align-middle pia-table">
+                            <thead>
+                                <tr>
+                                    <th style="width:6%">Week</th>
+                                    <th style="width:22%">Activity / Assignment</th>
+                                    <th style="width:24%">Learning Objective</th>
+                                    <th style="width:26%">Expected Learning Outcome</th>
+                                    <th style="width:22%">Supervisor Evaluation (1&ndash;5)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for w in weeks %}
+                                <tr>
+                                    <td class="fw-semibold">
+                                        Week {{ w.number }}
+                                        <div class="small text-muted fw-normal" data-week-range="{{ w.number }}">
+                                            {% if w.start_date and w.end_date %}
+                                            {{ w.start_date.strftime('%d %b %Y') }} &ndash; {{ w.end_date.strftime('%d %b %Y') }}
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                    <td>{{ w.activity }}</td>
+                                    <td class="small text-muted">{{ w.objective }}</td>
+                                    <td class="small text-muted">{{ w.outcome }}</td>
+                                    <td>
+                                        <div class="d-flex gap-2 flex-wrap pia-rating-group">
+                                            {% for n in range(1, 6) %}
+                                            {% set current = (form.get(w.field) if form else (evaluation|attr(w.field) if evaluation else None)) %}
+                                            <div class="form-check form-check-inline m-0">
+                                                <input class="form-check-input" type="radio" name="{{ w.field }}"
+                                                       id="{{ w.field }}_{{ n }}" value="{{ n }}"
+                                                       {{ 'checked' if current|string == n|string }}>
+                                                <label class="form-check-label" for="{{ w.field }}_{{ n }}">{{ n }}</label>
+                                            </div>
+                                            {% endfor %}
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <h6 class="pia-form-section">Competency Scorecard</h6>
+                    <div class="table-responsive mb-4">
+                        <table class="table table-bordered align-middle pia-table">
+                            <thead>
+                                <tr>
+                                    <th style="width:40%">Competency</th>
+                                    <th style="width:60%">Rating (1&ndash;5)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for field_name, label in competencies %}
+                                <tr>
+                                    <td class="fw-semibold">{{ label }}</td>
+                                    <td>
+                                        <div class="d-flex gap-2 flex-wrap pia-rating-group">
+                                            {% for n in range(1, 6) %}
+                                            {% set current = (form.get(field_name) if form else (evaluation|attr(field_name) if evaluation else None)) %}
+                                            <div class="form-check form-check-inline m-0">
+                                                <input class="form-check-input" type="radio" name="{{ field_name }}"
+                                                       id="{{ field_name }}_{{ n }}" value="{{ n }}"
+                                                       {{ 'checked' if current|string == n|string }}>
+                                                <label class="form-check-label" for="{{ field_name }}_{{ n }}">{{ n }}</label>
+                                            </div>
+                                            {% endfor %}
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="pia-total-score-box mb-4">
+                        <span>Total Score</span>
+                        <span><strong id="totalScoreDisplay">
+                            {{ evaluation.total_score if evaluation else 0 }}</strong> / {{ max_total }}</span>
+                    </div>
+
+                    <div class="row g-3 mb-4">
+                        <div class="col-12">
+                            <label class="form-label">Remarks</label>
+                            <textarea class="form-control" name="remarks" rows="2"
+                                      placeholder="Overall supervisor remarks...">{{ (form.get('remarks') if form else (evaluation.remarks if evaluation else '')) }}</textarea>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn pia-btn-primary">
+                        <i class="bi bi-save me-1"></i> Save Evaluation
+                    </button>
+                    <span class="form-text ms-2">
+                        You can save progress at any point and come back to finish rating remaining weeks
+                        before finalizing.
+                    </span>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    // Live-update the week 1-6 date ranges whenever an intern is
+    // selected, computed client-side from that intern's actual
+    // internship_start_date (never hard-coded).
+    document.addEventListener('DOMContentLoaded', function () {
+        var select = document.querySelector('select[name="project_id"]');
+        if (!select) return;
+
+        function formatDate(d) {
+            return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+        }
+
+        function recalcWeeks() {
+            var option = select.options[select.selectedIndex];
+            var startRaw = option ? option.getAttribute('data-start') : '';
+            var wraps = document.querySelectorAll('[data-week-range]');
+            if (!startRaw) {
+                wraps.forEach(function (el) { el.textContent = ''; });
+                return;
+            }
+            var start = new Date(startRaw + 'T00:00:00');
+            wraps.forEach(function (el) {
+                var weekNumber = parseInt(el.getAttribute('data-week-range'), 10);
+                var weekStart = new Date(start.getTime());
+                weekStart.setDate(weekStart.getDate() + (weekNumber - 1) * 7);
+                var weekEnd = new Date(weekStart.getTime());
+                weekEnd.setDate(weekEnd.getDate() + 6);
+                el.textContent = formatDate(weekStart) + ' \u2013 ' + formatDate(weekEnd);
+            });
+        }
+
+        select.addEventListener('change', recalcWeeks);
+        recalcWeeks();
+    });
+
+    // Live-update the running total as radio ratings are selected.
+    document.addEventListener('DOMContentLoaded', function () {
+        const form = document.getElementById('pmEvaluationForm');
+        if (!form) return;
+        const radios = form.querySelectorAll('input[type="radio"]');
+        const totalEl = document.getElementById('totalScoreDisplay');
+
+        function recalcTotal() {
+            let total = 0;
+            const seen = new Set();
+            radios.forEach(function (r) {
+                if (r.checked && !seen.has(r.name)) {
+                    total += parseInt(r.value, 10);
+                    seen.add(r.name);
+                }
+            });
+            totalEl.textContent = total;
+        }
+
+        radios.forEach(function (r) {
+            r.addEventListener('change', recalcTotal);
+        });
+        recalcTotal();
+    });
+</script>
+{% endblock %}

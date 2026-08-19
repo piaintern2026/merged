@@ -1,0 +1,106 @@
+{% extends 'base.html' %}
+{% block title %}LMS - Intern Onboarding Portal{% endblock %}
+
+{% block extra_head %}
+<style>
+    .lms-wrapper {
+        min-height: calc(100vh - 220px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 24px 12px;
+    }
+    .lms-card {
+        background: var(--pia-card);
+        border: 1px solid var(--pia-border);
+        border-radius: var(--pia-radius);
+        box-shadow: var(--pia-shadow-lg);
+        max-width: 640px;
+        width: 100%;
+        padding: 56px 40px;
+        text-align: center;
+    }
+    .lms-icon-circle {
+        width: 96px;
+        height: 96px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--pia-green) 0%, var(--pia-green-secondary) 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 24px;
+        box-shadow: var(--pia-shadow);
+    }
+    .lms-icon-circle i {
+        font-size: 2.75rem;
+        color: var(--pia-gold-light);
+    }
+    .lms-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: rgba(201, 162, 39, 0.14);
+        color: var(--pia-gold);
+        border: 1px solid var(--pia-gold-light);
+        font-weight: 600;
+        font-size: 0.85rem;
+        padding: 6px 16px;
+        border-radius: 999px;
+        margin-bottom: 18px;
+    }
+    .lms-title {
+        font-weight: 700;
+        color: var(--pia-text);
+        margin-bottom: 10px;
+    }
+    .lms-subtitle {
+        color: var(--pia-text-secondary);
+        font-size: 1.05rem;
+        max-width: 480px;
+        margin: 0 auto 18px;
+    }
+    .lms-description {
+        color: var(--pia-text-secondary);
+        font-size: 0.95rem;
+        max-width: 520px;
+        margin: 0 auto 32px;
+        line-height: 1.6;
+    }
+    .lms-btn-disabled {
+        background: var(--pia-border);
+        color: var(--pia-text-secondary);
+        border: none;
+        border-radius: var(--pia-radius-sm);
+        padding: 12px 28px;
+        font-weight: 600;
+        cursor: not-allowed;
+        opacity: 0.85;
+    }
+    .lms-btn-disabled i { margin-right: 8px; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="lms-wrapper">
+    <div class="lms-card pia-fade-in">
+        <div class="lms-icon-circle">
+            <i class="bi bi-mortarboard-fill"></i>
+        </div>
+
+        <span class="lms-badge">🚀 Coming Soon</span>
+
+        <h1 class="lms-title h3">Learning Management System (LMS)</h1>
+        <p class="lms-subtitle">
+            Our Learning Management System is currently under development and will be available soon.
+        </p>
+        <p class="lms-description">
+            This module will provide training courses, learning materials, quizzes, certifications,
+            progress tracking, and skill development resources for interns, managers, and HR.
+        </p>
+
+        <button type="button" class="lms-btn-disabled" disabled>
+            <i class="bi bi-lock-fill"></i>Access LMS &mdash; Available Soon
+        </button>
+    </div>
+</div>
+{% endblock %}

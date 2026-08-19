@@ -1,0 +1,62 @@
+{#
+    components/department_select.html
+    -----------------------------------
+    Reusable cascading Department -> Division/Section picker. Both
+    dropdowns are searchable (type to filter). Selecting a Department
+    fetches its Divisions/Sections from
+    /departments/api/sub-departments?department_id=<id> and repopulates
+    the Division/Section dropdown dynamically -- used everywhere a
+    department is picked: Intern Registration, Project Creation,
+    Project Assignment, Filters, Reports, etc.
+
+    Renders two real <select> elements under the hood (kept in sync by
+    JS), so existing backend form-reading code just needs to read the
+    two field names below -- nothing else about form submission
+    changes.
+
+    Usage:
+        {% from 'components/department_select.html' import department_select %}
+        {{ department_select(
+            widget_id='internDept',
+            departments=departments,
+            department_field='department_id',
+            sub_department_field='sub_department_id',
+            selected_department_id=data.department_id if data else None,
+            selected_sub_department_id=data.sub_department_id if data else None,
+        ) }}
+
+    Params:
+        widget_id                    - unique id for this widget instance
+        departments                  - iterable of Department objects (.id, .name)
+        department_field             - form field name for the Department select
+        sub_department_field         - form field name for the Division/Section select
+        selected_department_id       - pre-selected department id (or None)
+        selected_sub_department_id   - pre-selected division/section id (or None)
+        department_required          - whether the Department select is required (default true)
+        sub_department_required      - whether the Division/Section select is required (default false --
+                                        some departments, e.g. Internal Audit, have none)
+        allow_blank                  - include a blank "All Departments" option (for filter bars)
+#}
+{% macro department_select(widget_id, departments, department_field='department_id', sub_department_field='sub_department_id', selected_department_id=None, selected_sub_department_id=None, department_required=true, sub_department_required=false, allow_blank=false) %}
+<div class="pia-dept-cascade" data-widget-id="{{ widget_id }}" data-subdept-url="{{ url_for('department.api_sub_departments') }}">
+    <div class="row g-2">
+        <div class="col-md-6">
+            <label class="form-label small text-muted mb-1">Department{% if department_required %} *{% endif %}</label>
+            <select id="{{ widget_id }}-department" name="{{ department_field }}" class="form-select pia-searchable-select" data-role="department-select" {% if department_required %}required{% endif %}>
+                {% if allow_blank or not selected_department_id %}
+                <option value="">{{ 'All Departments' if allow_blank else 'Select a department…' }}</option>
+                {% endif %}
+                {% for dept in departments %}
+                <option value="{{ dept.id }}" data-city="{{ dept.city or '' }}" {{ 'selected' if selected_department_id and (selected_department_id|string) == (dept.id|string) else '' }}>{{ dept.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-6">
+            <label class="form-label small text-muted mb-1">Division/Section{% if sub_department_required %} *{% endif %}</label>
+            <select id="{{ widget_id }}-subdepartment" name="{{ sub_department_field }}" class="form-select pia-searchable-select" data-role="subdepartment-select" data-selected-id="{{ selected_sub_department_id or '' }}" {% if sub_department_required %}required{% endif %}>
+                <option value="">{{ 'All Divisions/Sections' if allow_blank else 'Select a department first…' }}</option>
+            </select>
+        </div>
+    </div>
+</div>
+{% endmacro %}

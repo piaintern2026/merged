@@ -1,0 +1,152 @@
+{% extends 'base.html' %}
+{% block title %}{{ pm.full_name }} - Project Manager Details{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h3 class="pia-page-title"><i class="bi bi-person-badge me-2"></i>Project Manager Details</h3>
+    <div>
+        <a href="{{ url_for('project_manager.edit_pm', pm_id=pm.id) }}" class="btn btn-outline-primary me-2">
+            <i class="bi bi-pencil-square me-1"></i> Edit
+        </a>
+        <a href="{{ url_for('project_manager.list_pms') }}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-1"></i> Back to List
+        </a>
+    </div>
+</div>
+
+<div class="card pia-card shadow-sm mb-4">
+    <div class="card-body p-4">
+        <div class="d-flex align-items-center mb-4">
+            {% if pm.user.profile_picture %}
+                <img src="{{ url_for('static', filename='uploads/profile_pics/' ~ pm.user.profile_picture) }}"
+                     class="pia-avatar-lg me-3" alt="{{ pm.full_name }}">
+            {% else %}
+                <span class="pia-avatar-lg pia-avatar-placeholder me-3">{{ pm.full_name[0]|upper }}</span>
+            {% endif %}
+            <div>
+                <h4 class="mb-0">{{ pm.full_name }}</h4>
+                <p class="text-muted mb-0">{{ pm.designation }} &bull; {{ pm.department.name if pm.department else '—' }}</p>
+            </div>
+            <span class="badge ms-auto {{ 'text-bg-success' if pm.is_active_flag else 'text-bg-secondary' }}">
+                {{ 'Active' if pm.is_active_flag else 'Inactive' }}
+            </span>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-md-6">
+                <h6 class="pia-form-section">Contact Information</h6>
+                <dl class="row mb-0">
+                    <dt class="col-5">Email</dt><dd class="col-7">{{ pm.user.email }}</dd>
+                    <dt class="col-5">Username</dt><dd class="col-7">{{ pm.user.username }}</dd>
+                    <dt class="col-5">Phone</dt><dd class="col-7">{{ pm.phone }}</dd>
+                    <dt class="col-5">City</dt><dd class="col-7">{{ pm.city }}</dd>
+                </dl>
+            </div>
+            <div class="col-md-6">
+                <h6 class="pia-form-section">Work Information</h6>
+                <dl class="row mb-0">
+                    <dt class="col-5">P Number</dt><dd class="col-7">{{ pm.p_number }}</dd>
+                    <dt class="col-5">Department</dt><dd class="col-7">{{ pm.department.name if pm.department else '—' }}</dd>
+                    {% if pm.sub_department %}<dt class="col-5">Division/Section</dt><dd class="col-7">{{ pm.sub_department.name }}</dd>{% endif %}
+                    <dt class="col-5">Designation</dt><dd class="col-7">{{ pm.designation }}</dd>
+                    <dt class="col-5">Joined</dt><dd class="col-7">{{ pm.created_at.strftime('%d %b %Y') if pm.created_at else '—' }}</dd>
+                </dl>
+            </div>
+        </div>
+
+        <div class="mt-4 d-flex gap-2">
+            <form method="POST" action="{{ url_for('project_manager.toggle_pm_status', pm_id=pm.id) }}">
+                <button type="submit" class="btn btn-outline-warning btn-sm">
+                    <i class="bi {{ 'bi-toggle-off' if pm.is_active_flag else 'bi-toggle2-on' }} me-1"></i>
+                    {{ 'Deactivate' if pm.is_active_flag else 'Activate' }}
+                </button>
+            </form>
+            {% if current_user.role == 'Admin' %}
+            <form method="POST" action="{{ url_for('project_manager.delete_pm', pm_id=pm.id) }}"
+                  onsubmit="return confirm('Permanently delete Project Manager \'{{ pm.full_name }}\'? This cannot be undone and will fail if Projects, Evaluations or Rotations are still linked to them.');">
+                <button type="submit" class="btn btn-outline-danger btn-sm">
+                    <i class="bi bi-trash3 me-1"></i> Delete Permanently
+                </button>
+            </form>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<div class="card pia-card shadow-sm mb-4">
+    <div class="pia-table-heading px-3 pt-3">
+        <h4 class="mb-0"><i class="bi bi-kanban me-2"></i>Assigned Projects ({{ active_projects|length }} active / {{ projects|length }} total)</h4>
+    </div>
+    <div class="table-responsive">
+        <table class="table pia-table align-middle mb-0">
+            <thead>
+                <tr>
+                    <th>Title</th>
+                    <th>Department</th>
+                    <th>Intern</th>
+                    <th>Status</th>
+                    <th>Deadline</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for p in projects %}
+                <tr>
+                    <td class="fw-semibold">
+                        <a href="{{ url_for('project.view_project', project_id=p.id) }}">{{ p.title }}</a>
+                        {% if not p.is_active %}<span class="badge text-bg-secondary ms-1">Disabled</span>{% endif %}
+                    </td>
+                    <td>{{ p.department.name if p.department else '—' }}</td>
+                    <td>{{ (p.interns | map(attribute='full_name') | join(', ')) if p.interns else '—' }}</td>
+                    <td><span class="badge text-bg-info">{{ p.status }}</span></td>
+                    <td>{{ p.deadline.strftime('%d %b %Y') }}</td>
+                </tr>
+                {% else %}
+                <tr><td colspan="5" class="text-center text-muted py-4">No projects assigned yet.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="card pia-card shadow-sm">
+    <div class="pia-table-heading px-3 pt-3">
+        <h4 class="mb-0"><i class="bi bi-clipboard-check me-2"></i>Evaluations Submitted</h4>
+    </div>
+    <div class="table-responsive">
+        <table class="table pia-table align-middle mb-0">
+            <thead>
+                <tr>
+                    <th>Intern</th>
+                    <th>Project</th>
+                    <th>Date</th>
+                    <th>Status</th>
+                    <th class="text-end">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for e in evaluations %}
+                <tr>
+                    <td class="fw-semibold">{{ e.intern.full_name if e.intern else '—' }}</td>
+                    <td>{{ e.project.title if e.project else '—' }}</td>
+                    <td>{{ e.evaluation_date.strftime('%d %b %Y') }}</td>
+                    <td>
+                        <span class="badge {{ 'text-bg-success' if e.is_finalized else 'text-bg-secondary' }}">
+                            {{ 'Finalized' if e.is_finalized else 'Draft' }}
+                        </span>
+                        {% if not e.is_active %}<span class="badge text-bg-secondary">Disabled</span>{% endif %}
+                    </td>
+                    <td class="text-end">
+                        <a href="{{ url_for('pm_evaluation.view_evaluation', evaluation_id=e.id) }}"
+                           class="btn btn-sm btn-outline-secondary" title="View">
+                            <i class="bi bi-eye"></i>
+                        </a>
+                    </td>
+                </tr>
+                {% else %}
+                <tr><td colspan="5" class="text-center text-muted py-4">No evaluations submitted yet.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

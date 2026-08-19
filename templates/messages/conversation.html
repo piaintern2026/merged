@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+{% block title %}{{ contact.full_name }} - Messages{% endblock %}
+
+{% block content %}
+<div class="pia-table-toolbar">
+    <div class="d-flex align-items-center">
+        <a href="{{ url_for('message.inbox') }}" class="btn pia-icon-btn me-2" title="Back to inbox">
+            <i class="bi bi-arrow-left"></i>
+        </a>
+        <span class="pia-avatar pia-avatar-placeholder me-2">{{ contact.full_name[0]|upper }}</span>
+        <div>
+            <h3 class="pia-page-title mb-0" style="font-size: 1.15rem;">{{ contact.full_name }}</h3>
+            <p class="pia-page-subtitle mb-0">
+                {% if role == 'pm' %}Intern{% else %}Project Manager{% endif %}
+            </p>
+        </div>
+    </div>
+</div>
+
+<div class="card pia-card shadow-sm">
+    <div class="card-body" id="piaThreadBody" style="max-height: 60vh; overflow-y: auto;">
+        {% for m in thread %}
+        {% set mine = m.sender_id == current_user.id %}
+        <div class="d-flex mb-3 {{ 'justify-content-end' if mine else 'justify-content-start' }}">
+            <div class="p-2 px-3 rounded-3 {{ 'text-bg-primary' if mine else 'bg-body-secondary' }}"
+                 style="max-width: 70%;">
+                <div style="white-space: pre-wrap; word-break: break-word;">{{ m.body }}</div>
+                <div class="small mt-1 {{ 'text-white-50' if mine else 'text-muted' }} text-end">
+                    {{ m.created_at.strftime('%d %b %Y, %I:%M %p') }}
+                    {% if mine %}
+                        <i class="bi {{ 'bi-check2-all' if m.is_read else 'bi-check2' }} ms-1"
+                           title="{{ 'Read' if m.is_read else 'Sent' }}"></i>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="text-muted text-center py-5">
+            <i class="bi bi-chat-dots display-6 d-block mb-2"></i>
+            No messages yet &mdash; send the first one below.
+        </div>
+        {% endfor %}
+    </div>
+    <div class="card-footer bg-transparent">
+        <form method="POST" action="{{ url_for('message.conversation', intern_id_or_pm_id=contact.id) }}"
+              class="d-flex gap-2">
+            <textarea name="body" class="form-control" rows="1" placeholder="Type your message&hellip;"
+                      required maxlength="4000" style="resize: none;"></textarea>
+            <button type="submit" class="btn pia-btn-primary text-nowrap">
+                <i class="bi bi-send me-1"></i> Send
+            </button>
+        </form>
+    </div>
+</div>
+
+<script>
+(function () {
+    const body = document.getElementById("piaThreadBody");
+    if (body) body.scrollTop = body.scrollHeight;
+})();
+</script>
+{% endblock %}

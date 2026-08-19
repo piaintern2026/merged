@@ -1,0 +1,92 @@
+{% extends 'base.html' %}
+{% block title %}My Reports - Intern Onboarding Portal{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+    <h3 class="pia-page-title"><i class="bi bi-file-earmark-arrow-down me-2"></i>My Reports</h3>
+</div>
+
+<p class="text-muted mb-4">
+    Generate downloadable reports as PDF or Excel (.xlsx), scoped to your assigned interns and projects only.
+    Files are built on demand from live data and are not stored on the server.
+</p>
+
+<div class="row g-3">
+    <div class="col-md-6">
+        <div class="card pia-card shadow-sm h-100">
+            <div class="card-header pia-card-header"><i class="bi bi-calendar-check me-2"></i>Attendance Report</div>
+            <div class="card-body">
+                <p class="text-muted small">Every attendance record for interns assigned to you.</p>
+                <div class="d-flex gap-2">
+                    <a href="{{ url_for('pm_extra.report_attendance', fmt='pdf') }}" class="btn btn-outline-danger btn-sm">
+                        <i class="bi bi-file-earmark-pdf me-1"></i> PDF
+                    </a>
+                    <a href="{{ url_for('pm_extra.report_attendance', fmt='excel') }}" class="btn btn-outline-success btn-sm">
+                        <i class="bi bi-file-earmark-excel me-1"></i> Excel
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card pia-card shadow-sm h-100">
+            <div class="card-header pia-card-header"><i class="bi bi-clipboard-check me-2"></i>Evaluation Report</div>
+            <div class="card-body">
+                <p class="text-muted small">All evaluations you (or Station HR) have recorded for your interns.</p>
+                <div class="d-flex gap-2">
+                    <a href="{{ url_for('pm_extra.report_evaluation', fmt='pdf') }}" class="btn btn-outline-danger btn-sm">
+                        <i class="bi bi-file-earmark-pdf me-1"></i> PDF
+                    </a>
+                    <a href="{{ url_for('pm_extra.report_evaluation', fmt='excel') }}" class="btn btn-outline-success btn-sm">
+                        <i class="bi bi-file-earmark-excel me-1"></i> Excel
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card pia-card shadow-sm h-100">
+            <div class="card-header pia-card-header"><i class="bi bi-kanban me-2"></i>Project Report</div>
+            <div class="card-body">
+                <p class="text-muted small">Summary of every project currently assigned to you.</p>
+                <div class="d-flex gap-2">
+                    <a href="{{ url_for('pm_extra.report_project', fmt='pdf') }}" class="btn btn-outline-danger btn-sm">
+                        <i class="bi bi-file-earmark-pdf me-1"></i> PDF
+                    </a>
+                    <a href="{{ url_for('pm_extra.report_project', fmt='excel') }}" class="btn btn-outline-success btn-sm">
+                        <i class="bi bi-file-earmark-excel me-1"></i> Excel
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card pia-card shadow-sm h-100">
+            <div class="card-header pia-card-header"><i class="bi bi-person-lines-fill me-2"></i>Intern Performance Report</div>
+            <div class="card-body">
+                <p class="text-muted small">Detailed progress report for a single assigned intern.</p>
+                <form method="get" action="{{ url_for('pm_extra.report_intern_performance', fmt='pdf') }}" class="d-flex gap-2 flex-wrap align-items-center" id="internPerfForm">
+                    <select name="intern_id" class="form-select form-select-sm" style="max-width: 220px;" required form="internPerfForm">
+                        <option value="">Select intern...</option>
+                        {% for intern in interns %}
+                        <option value="{{ intern.id }}">{{ intern.full_name }} - {{ intern.city }} - {{ intern.department.name if intern.department else '—' }}</option>
+                        {% endfor %}
+                    </select>
+                    <button type="submit" class="btn btn-outline-danger btn-sm" formaction="{{ url_for('pm_extra.report_intern_performance', fmt='pdf') }}">
+                        <i class="bi bi-file-earmark-pdf me-1"></i> PDF
+                    </button>
+                    <button type="submit" class="btn btn-outline-success btn-sm" formaction="{{ url_for('pm_extra.report_intern_performance', fmt='excel') }}">
+                        <i class="bi bi-file-earmark-excel me-1"></i> Excel
+                    </button>
+                </form>
+                {% if not interns %}
+                <p class="text-muted small mt-2 mb-0">No interns assigned to you yet.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

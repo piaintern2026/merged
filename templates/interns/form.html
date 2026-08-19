@@ -1,0 +1,137 @@
+{% extends 'base.html' %}
+{% block title %}{{ 'Edit' if intern else 'Add' }} Intern - Intern Onboarding Portal{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h3 class="pia-page-title">
+        <i class="bi bi-mortarboard me-2"></i>{{ 'Edit' if intern else 'Add' }} Intern
+    </h3>
+    <a href="{{ url_for('intern.list_interns') }}" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left me-1"></i> Back to List
+    </a>
+</div>
+
+{% from 'components/department_select.html' import department_select %}
+{% set data = form if form else intern %}
+<div class="card pia-card shadow-sm">
+    <div class="card-body p-4">
+        <form method="POST" enctype="multipart/form-data" novalidate data-username-sync>
+            <h6 class="pia-form-section">Personal Information</h6>
+            <div class="row g-3 mb-3">
+                <div class="col-md-6">
+                    <label class="form-label">Full Name <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" name="full_name" required
+                           value="{{ data.full_name if data else '' }}">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">CNIC <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" name="cnic" required placeholder="42101-1234567-1"
+                           value="{{ data.cnic if data else '' }}">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Station <span class="text-danger">*</span></label>
+                    <select class="form-select" name="station" required>
+                        <option value="" {{ 'selected' if not (data and data.station) else '' }} disabled>Select a station&hellip;</option>
+                        {% for s in stations %}
+                        <option value="{{ s }}" {{ 'selected' if data and data.station == s else '' }}>{{ s }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Cell No <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" name="phone" required placeholder="03001234567"
+                           value="{{ data.phone if data else '' }}">
+                </div>
+            </div>
+
+            <h6 class="pia-form-section">Academic Information</h6>
+            <div class="row g-3 mb-3">
+                <div class="col-md-4">
+                    <label class="form-label">Qualification <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" name="qualification" required placeholder="e.g. BS"
+                           value="{{ data.qualification if data else '' }}">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Major <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" name="major" required placeholder="e.g. Computer Science"
+                           value="{{ data.major if data else '' }}">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">University <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" name="university" required
+                           value="{{ data.university if data else '' }}">
+                </div>
+            </div>
+
+            <h6 class="pia-form-section">Internship Details</h6>
+            <div class="row g-3 mb-3">
+                <div class="col-md-12">
+                    {{ department_select(
+                        widget_id='internDept',
+                        departments=departments,
+                        selected_department_id=data.department_id if data else None,
+                        selected_sub_department_id=data.sub_department_id if data else None,
+                    ) }}
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Start Date <span class="text-danger">*</span></label>
+                    <input type="date" class="form-control" name="internship_start_date" required
+                           value="{{ intern.internship_start_date if intern else '' }}">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">End Date <span class="text-danger">*</span></label>
+                    <input type="date" class="form-control" name="internship_end_date" required
+                           value="{{ intern.internship_end_date if intern else '' }}">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Documents Status <span class="text-danger">*</span></label>
+                    <select class="form-select" name="documents_status" required>
+                        {% for opt in documents_statuses %}
+                        <option value="{{ opt }}"
+                            {{ 'selected' if (data and data.documents_status == opt) or (not data and opt == 'Pending') }}>{{ opt }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Certificate Status <span class="text-danger">*</span></label>
+                    <select class="form-select" name="certificate_status" required>
+                        {% for opt in certificate_statuses %}
+                        <option value="{{ opt }}"
+                            {{ 'selected' if (data and data.certificate_status == opt) or (not data and opt == 'Pending') }}>{{ opt }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            <h6 class="pia-form-section">Account Information</h6>
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label">Email <span class="text-danger">*</span></label>
+                    <input type="email" class="form-control" name="email" required
+                           value="{{ (data.email if form else intern.user.email) if data else '' }}">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Username <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" name="username" required
+                           value="{{ (data.username if form else intern.user.username) if data else '' }}">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">
+                        Password
+                    </label>
+                    <input type="password" class="form-control" name="password"
+                           placeholder="{{ 'Leave blank to keep current password' if intern else 'Leave blank for default password (12345678)' }}">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Profile Picture</label>
+                    <input type="file" class="form-control" name="profile_picture" accept=".png,.jpg,.jpeg,.gif">
+                </div>
+            </div>
+
+            <button type="submit" class="btn pia-btn-primary mt-4">
+                <i class="bi bi-check-circle me-1"></i> {{ 'Update' if intern else 'Save' }} Intern
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %}

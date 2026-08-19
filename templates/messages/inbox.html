@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+{% block title %}Messages - Intern Onboarding Portal{% endblock %}
+
+{% block content %}
+<div class="pia-table-toolbar">
+    <div>
+        <h3 class="pia-page-title mb-1"><i class="bi bi-chat-dots me-2"></i>Messages</h3>
+        <p class="pia-page-subtitle mb-0">
+            {% if role == 'pm' %}
+            Direct, internal messages with the interns assigned to you.
+            {% else %}
+            Direct, internal messages with your assigned Project Manager.
+            {% endif %}
+        </p>
+    </div>
+</div>
+
+<div class="card pia-card shadow-sm">
+    <ul class="list-group list-group-flush">
+        {% for c in conversations %}
+        <li class="list-group-item">
+            <a href="{{ url_for('message.conversation', intern_id_or_pm_id=c.contact.id) }}"
+               class="d-flex align-items-center text-decoration-none text-body py-1">
+                <span class="pia-avatar pia-avatar-placeholder me-3 flex-shrink-0">
+                    {{ c.contact.full_name[0]|upper }}
+                </span>
+                <div class="flex-grow-1 min-w-0">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <strong class="text-truncate">{{ c.contact.full_name }}</strong>
+                        {% if c.last_message %}
+                        <small class="text-muted text-nowrap ms-2">{{ c.last_message.created_at.strftime('%d %b, %I:%M %p') }}</small>
+                        {% endif %}
+                    </div>
+                    <div class="text-muted small text-truncate" style="max-width: 90%;">
+                        {% if c.last_message %}
+                            {% if c.last_message.sender_id == current_user.id %}<span class="text-muted">You: </span>{% endif %}{{ c.last_message.body }}
+                        {% else %}
+                            No messages yet &mdash; say hello.
+                        {% endif %}
+                    </div>
+                </div>
+                {% if c.unread_count > 0 %}
+                <span class="badge rounded-pill text-bg-primary ms-3">{{ c.unread_count }}</span>
+                {% endif %}
+            </a>
+        </li>
+        {% else %}
+        <li class="list-group-item text-muted text-center py-5">
+            <i class="bi bi-chat-dots display-6 d-block mb-2"></i>
+            {% if role == 'pm' %}
+            You have no interns assigned to message yet.
+            {% else %}
+            You don't have a Project Manager assigned yet.
+            {% endif %}
+        </li>
+        {% endfor %}
+    </ul>
+</div>
+{% endblock %}

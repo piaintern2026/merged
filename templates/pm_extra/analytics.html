@@ -1,0 +1,126 @@
+{% extends 'base.html' %}
+{% block title %}My Analytics - Intern Onboarding Portal{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+    <h3 class="pia-page-title"><i class="bi bi-bar-chart-line me-2"></i>My Analytics</h3>
+    <span class="text-muted small">{{ projects_count }} project(s) &bull; {{ interns_count }} intern(s)</span>
+</div>
+
+<div class="row g-3 mb-3">
+    <div class="col-sm-4">
+        <div class="card pia-stat-card border-0 shadow-sm">
+            <div class="card-body">
+                <div class="pia-stat-value">{{ attendance_percentage }}%</div>
+                <div class="pia-stat-label">Attendance Percentage</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-4">
+        <div class="card pia-stat-card border-0 shadow-sm">
+            <div class="card-body">
+                <div class="pia-stat-value">{{ submission_rate }}%</div>
+                <div class="pia-stat-label">Submission Rate</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-4">
+        <div class="card pia-stat-card border-0 shadow-sm">
+            <div class="card-body">
+                <div class="pia-stat-value">
+                    {{ deadline_compliance[0].count }}/{{ deadline_compliance[0].count + deadline_compliance[1].count }}
+                </div>
+                <div class="pia-stat-label">Deadline Compliance (On Time)</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3">
+    <div class="col-lg-6">
+        <div class="card pia-card shadow-sm h-100">
+            <div class="card-header pia-card-header">Assigned Projects Status</div>
+            <div class="card-body">
+                <ul class="list-group list-group-flush">
+                    {% for row in project_status %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                        {{ row.label }}
+                        <span class="badge text-bg-primary rounded-pill">{{ row.count }}</span>
+                    </li>
+                    {% else %}
+                    <li class="list-group-item text-muted text-center py-3 px-0">No data available yet.</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="card pia-card shadow-sm h-100">
+            <div class="card-header pia-card-header">Assigned Intern Performance (Avg %)</div>
+            <div class="card-body">
+                <ul class="list-group list-group-flush">
+                    {% for row in intern_performance %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                        {{ row.label }}
+                        <span class="badge text-bg-primary rounded-pill">{{ row.count }}%</span>
+                    </li>
+                    {% else %}
+                    <li class="list-group-item text-muted text-center py-3 px-0">No data available yet.</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="card pia-card shadow-sm h-100">
+            <div class="card-header pia-card-header">Attendance Breakdown</div>
+            <div class="card-body">
+                <ul class="list-group list-group-flush">
+                    {% for row in attendance_breakdown %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                        {{ row.label }}
+                        <span class="badge text-bg-primary rounded-pill">{{ row.count }}</span>
+                    </li>
+                    {% else %}
+                    <li class="list-group-item text-muted text-center py-3 px-0">No data available yet.</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="card pia-card shadow-sm h-100">
+            <div class="card-header pia-card-header">Deadline Compliance</div>
+            <div class="card-body">
+                <ul class="list-group list-group-flush">
+                    {% for row in deadline_compliance %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                        {{ row.label }}
+                        <span class="badge text-bg-primary rounded-pill">{{ row.count }}</span>
+                    </li>
+                    {% else %}
+                    <li class="list-group-item text-muted text-center py-3 px-0">No data available yet.</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="card pia-card shadow-sm h-100">
+            <div class="card-header pia-card-header">Evaluation Statistics (PM Forms)</div>
+            <div class="card-body">
+                <ul class="list-group list-group-flush">
+                    {% for row in evaluation_stats %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                        {{ row.label }}
+                        <span class="badge text-bg-primary rounded-pill">{{ row.count }}</span>
+                    </li>
+                    {% else %}
+                    <li class="list-group-item text-muted text-center py-3 px-0">No data available yet.</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

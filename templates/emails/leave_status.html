@@ -1,0 +1,50 @@
+{% extends "emails/base_email.html" %}
+{% block title %}Leave Request Update{% endblock %}
+{% block preheader %}An update on a leave request on the Intern Onboarding Portal.{% endblock %}
+
+{% block body %}
+{% set color = {"submitted": "#B7791F", "approved": "#2E7D32", "rejected": "#C62828", "cancelled": "#5E6A61"}.get(event, "#01411C") %}
+<h2 style="margin:0 0 16px 0; font-family:'Segoe UI',Arial,sans-serif; color:{{ color }}; font-size:20px;">
+    {% if event == "submitted" %}New Leave Request Awaiting Review
+    {% elif event == "approved" %}Leave Request Approved
+    {% elif event == "rejected" %}Leave Request Rejected
+    {% elif event == "cancelled" %}Approved Leave Cancelled
+    {% else %}Leave Request Update{% endif %}
+</h2>
+
+<p style="margin:0 0 16px 0; font-family:'Segoe UI',Arial,sans-serif; font-size:14px; color:#1E1E1E; line-height:1.6;">
+    Hi {{ recipient_name }},<br><br>
+    {% if event == "submitted" %}
+        <strong>{{ intern_name }}</strong> has submitted a {{ leave_type }} leave request awaiting your review.
+    {% elif event == "approved" %}
+        Your {{ leave_type }} leave request has been <strong>approved</strong>{% if reviewer_name %} by {{ reviewer_name }}{% endif %}.
+    {% elif event == "rejected" %}
+        Your {{ leave_type }} leave request has been <strong>rejected</strong>{% if reviewer_name %} by {{ reviewer_name }}{% endif %}.
+    {% elif event == "cancelled" %}
+        Your previously approved {{ leave_type }} leave has been <strong>cancelled</strong>{% if reviewer_name %} by {{ reviewer_name }}{% endif %}.
+    {% endif %}
+</p>
+
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0"
+       style="background-color:#F8F9F7; border:1px solid #D8DCCF; border-radius:10px; margin:20px 0;">
+    <tr>
+        <td style="padding:16px 20px; font-family:'Segoe UI',Arial,sans-serif; font-size:13px; color:#1E1E1E; line-height:1.8;">
+            <strong>Leave Type:</strong> {{ leave_type }}<br>
+            <strong>Dates:</strong> {{ start_date }} to {{ end_date }}<br>
+            {% if reason %}<strong>Reason:</strong> {{ reason }}<br>{% endif %}
+            {% if review_remarks %}<strong>Remarks:</strong> {{ review_remarks }}{% endif %}
+        </td>
+    </tr>
+</table>
+
+<table role="presentation" cellpadding="0" cellspacing="0">
+    <tr>
+        <td style="border-radius:8px; background-color:#01411C;">
+            <a href="{{ leave_url }}" target="_blank"
+               style="display:inline-block; padding:12px 28px; font-family:'Segoe UI',Arial,sans-serif; font-size:14px; font-weight:600; color:#FFFFFF; text-decoration:none; border-radius:8px;">
+                View Leave Requests
+            </a>
+        </td>
+    </tr>
+</table>
+{% endblock %}
